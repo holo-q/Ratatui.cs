@@ -43,6 +43,20 @@ var snapshot = Headless.RenderTable(30, 6, table);
 Console.WriteLine(snapshot);
 ```
 
+Snapshots
+- Paragraph
+  - docs/assets/snapshots/paragraph.png
+- Table
+  - docs/assets/snapshots/table.png
+- Chart
+  - docs/assets/snapshots/chart.png
+- Tabs
+  - docs/assets/snapshots/tabs.png
+- Gauge
+  - docs/assets/snapshots/gauge.png
+- Combined (mini dashboard)
+  - docs/assets/snapshots/combined.png
+
 What this is
 - Native Rust cdylib (`native/ratatui_ffi`) with a stable C ABI over Ratatui.
 - Idiomatic .NET library (`src/Ratatui`) with SafeHandles and builders.

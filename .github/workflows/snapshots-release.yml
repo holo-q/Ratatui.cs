@@ -1,0 +1,51 @@
+name: snapshots-release
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build native linux-x64
+        run: |
+          cd native/ratatui_ffi
+          cargo build --release
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Place native lib for sample
+        run: |
+          mkdir -p examples/Snapshots/runtimes/linux-x64/native
+          cp native/ratatui_ffi/target/release/libratatui_ffi.so examples/Snapshots/runtimes/linux-x64/native/
+      - name: Run snapshots
+        run: |
+          dotnet run --project examples/Snapshots/Snapshots.csproj -c Release
+      - name: Install ImageMagick + fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick fonts-dejavu-core
+      - name: Convert to PNG
+        run: |
+          ./scripts/ascii2png.sh artifacts/snapshots artifacts/snapshots
+      - name: Commit PNGs to main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git fetch origin main
+          git checkout main
+          mkdir -p docs/assets/snapshots
+          cp -f artifacts/snapshots/*.png docs/assets/snapshots/
+          git add docs/assets/snapshots/*.png
+          git commit -m "docs(snapshots): update PNG snapshots for $GITHUB_REF_NAME" || echo "No changes to commit"
+          git push origin main
