@@ -134,3 +134,11 @@ public sealed class ScrollbarHandle : SafeHandle
     internal static ScrollbarHandle FromRaw(IntPtr ptr) { var h = new ScrollbarHandle(); h.SetHandle(ptr); return h; }
     protected override bool ReleaseHandle() { if (!IsInvalid) Interop.Native.RatatuiScrollbarFree(handle); return true; }
 }
+
+public sealed class ChartHandle : SafeHandle
+{
+    public ChartHandle() : base(IntPtr.Zero, ownsHandle: true) {}
+    public override bool IsInvalid => handle == IntPtr.Zero || handle == new IntPtr(-1);
+    internal static ChartHandle FromRaw(IntPtr ptr) { var h = new ChartHandle(); h.SetHandle(ptr); return h; }
+    protected override bool ReleaseHandle() { if (!IsInvalid) Interop.Native.RatatuiChartFree(handle); return true; }
+}

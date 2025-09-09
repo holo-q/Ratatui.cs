@@ -142,6 +142,18 @@ public sealed class Terminal : IDisposable
     public void Draw(Scrollbar sb, Vec2i pos, Vec2i size)
         => Draw(sb, Rect.From(pos, size));
 
+    public void Draw(Chart chart, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (chart is null) throw new ArgumentNullException(nameof(chart));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawChartIn(_handle.DangerousGetHandle(), chart.DangerousHandle, r);
+        if (!ok) throw new InvalidOperationException("DrawChart failed");
+    }
+
+    public void Draw(Chart chart, Vec2i pos, Vec2i size)
+        => Draw(chart, Rect.From(pos, size));
+
     public bool NextEvent(TimeSpan timeout, out Event ev)
     {
         EnsureNotDisposed();

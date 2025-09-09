@@ -9,14 +9,24 @@ internal static class Native
 {
     private const string LibraryName = "ratatui_ffi";
 
-    static Native()
+    // Register the resolver as early as possible. Also exposed for ModuleInitializer.
+    internal static void EnsureResolver()
     {
-        // Ensure we can load the native library from local dev paths.
-        NativeLibrary.SetDllImportResolver(typeof(Native).Assembly, Resolve);
+        try
+        {
+            NativeLibrary.SetDllImportResolver(typeof(Native).Assembly, Resolve);
+        }
+        catch
+        {
+            // Ignore if already set for this assembly
+        }
     }
 
     private static IntPtr Resolve(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
+        // Always ensure resolver is hooked when first used.
+        // Safe to call repeatedly due to try/catch in EnsureResolver.
+        EnsureResolver();
         if (!string.Equals(libraryName, LibraryName, StringComparison.Ordinal))
             return IntPtr.Zero;
 
@@ -28,19 +38,32 @@ internal static class Native
             if (File.Exists(candidate) && NativeLibrary.TryLoad(candidate, out var handle))
                 return handle;
         }
+        // Optional direct file override
+        var envPath = Environment.GetEnvironmentVariable("RATATUI_FFI_PATH");
+        if (!string.IsNullOrEmpty(envPath))
+        {
+            var full = Path.GetFullPath(envPath);
+            if (File.Exists(full) && NativeLibrary.TryLoad(full, out var handle))
+                return handle;
+        }
 
         // Search common dev output locations relative to the managed assembly.
         var baseDir = AppContext.BaseDirectory;
         var fileName = GetPlatformLibraryFileName(LibraryName);
-        var candidates = new[]
+        var candidates = new List<string>();
+        // Standard locations
+        candidates.Add(Path.Combine(baseDir, fileName));
+        candidates.Add(Path.Combine(baseDir, "runtimes", GetRid(), "native", fileName));
+        // Dev builds from the repo: climb up to 6 levels just in case
+        for (int up = 3; up <= 6; up++)
         {
-            Path.Combine(baseDir, fileName),
-            Path.Combine(baseDir, "runtimes", GetRid(), "native", fileName),
-            Path.Combine(baseDir, "..", "..", "..", "..", "native", "ratatui_ffi", "target", "debug", fileName),
-            Path.Combine(baseDir, "..", "..", "..", "..", "native", "ratatui_ffi", "target", "release", fileName),
-            Path.Combine(baseDir, "..", "..", "..", "..", "..", "native", "ratatui_ffi", "target", "debug", fileName),
-            Path.Combine(baseDir, "..", "..", "..", "..", "..", "native", "ratatui_ffi", "target", "release", fileName),
-        };
+            var ups = new string[up];
+            Array.Fill(ups, "..");
+            var debugPath = Path.Combine(new[] { baseDir }.Concat(ups).Concat(new[] { "native", "ratatui_ffi", "target", "debug", fileName }).ToArray());
+            var releasePath = Path.Combine(new[] { baseDir }.Concat(ups).Concat(new[] { "native", "ratatui_ffi", "target", "release", fileName }).ToArray());
+            candidates.Add(debugPath);
+            candidates.Add(releasePath);
+        }
 
         foreach (var path in candidates)
         {
@@ -198,7 +221,7 @@ internal static class Native
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiHeadlessRenderTable(ushort width, ushort height, IntPtr table, out IntPtr utf8Text);
 
-    internal enum FfiWidgetKind : uint { Paragraph = 1, List = 2, Table = 3, Gauge = 4, Tabs = 5, BarChart = 6, Sparkline = 7, Scrollbar = 8 }
+    internal enum FfiWidgetKind : uint { Paragraph = 1, List = 2, Table = 3, Gauge = 4, Tabs = 5, BarChart = 6, Sparkline = 7, Chart = 8, Scrollbar = 9 }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct FfiDrawCmd { public uint Kind; public IntPtr Handle; public FfiRect Rect; }
@@ -310,4 +333,22 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_scrollbar", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiHeadlessRenderScrollbar(ushort width, ushort height, IntPtr s, out IntPtr utf8Text);
+
+    // Chart
+    [DllImport(LibraryName, EntryPoint = "ratatui_chart_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern IntPtr RatatuiChartNew();
+    [DllImport(LibraryName, EntryPoint = "ratatui_chart_free", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiChartFree(IntPtr c);
+    [DllImport(LibraryName, EntryPoint = "ratatui_chart_add_line", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiChartAddLine(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, double[] pointsXY, UIntPtr lenPairs, FfiStyle style);
+    [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_axes_titles", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiChartSetAxesTitles(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string? xTitle, [MarshalAs(UnmanagedType.LPUTF8Str)] string? yTitle);
+    [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiChartSetBlockTitle(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_chart_in", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiTerminalDrawChartIn(IntPtr term, IntPtr c, FfiRect rect);
+    [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_chart", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiHeadlessRenderChart(ushort width, ushort height, IntPtr c, out IntPtr utf8Text);
 }

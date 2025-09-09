@@ -91,4 +91,13 @@ public static class Headless
         try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
         finally { Interop.Native.RatatuiStringFree(ptr); }
     }
+
+    public static string RenderChart(int width, int height, Chart c)
+    {
+        if (c is null) throw new ArgumentNullException(nameof(c));
+        var ok = Interop.Native.RatatuiHeadlessRenderChart((ushort)width, (ushort)height, c.DangerousHandle, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless chart render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
 }

@@ -102,7 +102,7 @@ jobs:
               --skip-duplicate
           done
       - name: Publish to nuget.org (tags only)
-        if: ${{ github.ref_type == 'tag' && secrets.NUGET_API_KEY != '' }}
+        if: ${{ github.ref_type == 'tag' }}
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |

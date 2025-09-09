@@ -1,6 +1,8 @@
 Ratatui.cs — C# bindings for Ratatui (Rust TUI)
 
 ![CI](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml/badge.svg)
+[![Guard](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/holo-q/Ratatui.cs?logo=github)](https://github.com/holo-q/Ratatui.cs/releases)
 [![NuGet](https://img.shields.io/nuget/v/Ratatui.cs.svg?logo=nuget&label=NuGet)](https://www.nuget.org/packages/Ratatui.cs)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Ratatui.cs.svg?logo=nuget)](https://www.nuget.org/packages/Ratatui.cs)
 
@@ -27,6 +29,9 @@ Local dev quickstart
    - Interactive: `dotnet run --project examples/Hello/Hello.csproj`
    - Headless snapshots: `dotnet run --project examples/Smoke/Smoke.csproj`
    - Composite headless: `dotnet run --project examples/SmokeFrame/SmokeFrame.csproj`
+   - If you see DllNotFoundException, point the loader to your native build:
+     - `export RATATUI_FFI_DIR=$(pwd)/native/ratatui_ffi/target/debug` (or `.../release`)
+     - Or set `RATATUI_FFI_PATH` to the full path of the built library (`libratatui_ffi.so`/`.dylib` or `ratatui_ffi.dll`).
 
 Using in your app (source)
 - Add a ProjectReference to `src/Ratatui/Ratatui.csproj`.
