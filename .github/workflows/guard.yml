@@ -1,0 +1,15 @@
+name: guard
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  no-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check no build artifacts are tracked
+        run: |
+          bash scripts/guard-no-build-artifacts.sh
