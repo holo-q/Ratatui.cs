@@ -29,6 +29,9 @@ pub struct FfiParagraph {
 pub struct FfiList {
     items: Vec<Line<'static>>,
     block: Option<Block<'static>>,
+    selected: Option<usize>,
+    highlight_style: Option<Style>,
+    highlight_symbol: Option<String>,
 }
 
 #[repr(C)]
@@ -353,7 +356,15 @@ pub extern "C" fn ratatui_headless_render_list(
     let items: Vec<ListItem> = l.items.iter().cloned().map(ListItem::new).collect();
     let mut widget = List::new(items);
     if let Some(b) = &l.block { widget = widget.block(b.clone()); }
-    ratatui::widgets::Widget::render(widget, area, &mut buf);
+    if let Some(sty) = &l.highlight_style { widget = widget.highlight_style(sty.clone()); }
+    if let Some(sym) = &l.highlight_symbol { widget = widget.highlight_symbol(sym.clone()); }
+    if let Some(sel) = l.selected {
+        let mut state = ratatui::widgets::ListState::default();
+        state.select(Some(sel));
+        ratatui::widgets::StatefulWidget::render(widget, area, &mut buf, &mut state);
+    } else {
+        ratatui::widgets::Widget::render(widget, area, &mut buf);
+    }
     let mut s = String::new();
     for y in 0..height { for x in 0..width { let cell = &buf[(x, y)]; s.push_str(cell.symbol()); } if y + 1 < height { s.push('\n'); } }
     match CString::new(s) { Ok(cstr) => { unsafe { *out_text_utf8 = cstr.into_raw(); } true }, Err(_) => false }
@@ -377,7 +388,15 @@ pub extern "C" fn ratatui_headless_render_table(
     let mut widget = Table::new(rows, widths);
     if let Some(hr) = header_row { widget = widget.header(hr); }
     if let Some(b) = &tb.block { widget = widget.block(b.clone()); }
-    ratatui::widgets::Widget::render(widget, area, &mut buf);
+    if let Some(sty) = &tb.row_highlight_style { widget = widget.row_highlight_style(sty.clone()); }
+    if let Some(sym) = &tb.highlight_symbol { widget = widget.highlight_symbol(sym.clone()); }
+    if let Some(sel) = tb.selected {
+        let mut state = ratatui::widgets::TableState::default();
+        state.select(Some(sel));
+        ratatui::widgets::StatefulWidget::render(widget, area, &mut buf, &mut state);
+    } else {
+        ratatui::widgets::Widget::render(widget, area, &mut buf);
+    }
     let mut s = String::new();
     for y in 0..height { for x in 0..width { let cell = &buf[(x, y)]; s.push_str(cell.symbol()); } if y + 1 < height { s.push('\n'); } }
     match CString::new(s) { Ok(cstr) => { unsafe { *out_text_utf8 = cstr.into_raw(); } true }, Err(_) => false }
@@ -581,7 +600,7 @@ pub extern "C" fn ratatui_inject_mouse(kind: u32, btn: u32, x: u16, y: u16, mods
 
 #[no_mangle]
 pub extern "C" fn ratatui_list_new() -> *mut FfiList {
-    Box::into_raw(Box::new(FfiList { items: Vec::new(), block: None }))
+    Box::into_raw(Box::new(FfiList { items: Vec::new(), block: None, selected: None, highlight_style: None, highlight_symbol: None }))
 }
 
 #[no_mangle]
@@ -614,6 +633,27 @@ pub extern "C" fn ratatui_list_set_block_title(lst: *mut FfiList, title_utf8: *c
 }
 
 #[no_mangle]
+pub extern "C" fn ratatui_list_set_selected(lst: *mut FfiList, selected: i32) {
+    if lst.is_null() { return; }
+    let l = unsafe { &mut *lst };
+    l.selected = if selected < 0 { None } else { Some(selected as usize) };
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_list_set_highlight_style(lst: *mut FfiList, style: FfiStyle) {
+    if lst.is_null() { return; }
+    let l = unsafe { &mut *lst };
+    l.highlight_style = Some(style_from_ffi(style));
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_list_set_highlight_symbol(lst: *mut FfiList, sym_utf8: *const c_char) {
+    if lst.is_null() { return; }
+    let l = unsafe { &mut *lst };
+    l.highlight_symbol = if sym_utf8.is_null() { None } else { unsafe { CStr::from_ptr(sym_utf8) }.to_str().ok().map(|s| s.to_string()) };
+}
+
+#[no_mangle]
 pub extern "C" fn ratatui_terminal_draw_list_in(term: *mut FfiTerminal, lst: *const FfiList, rect: FfiRect) -> bool {
     if term.is_null() || lst.is_null() { return false; }
     let t = unsafe { &mut *term };
@@ -622,8 +662,16 @@ pub extern "C" fn ratatui_terminal_draw_list_in(term: *mut FfiTerminal, lst: *co
     let items: Vec<ListItem> = l.items.iter().cloned().map(ListItem::new).collect();
     let mut widget = List::new(items);
     if let Some(b) = &l.block { widget = widget.block(b.clone()); }
+    if let Some(sty) = &l.highlight_style { widget = widget.highlight_style(sty.clone()); }
+    if let Some(sym) = &l.highlight_symbol { widget = widget.highlight_symbol(sym.clone()); }
     let res = t.terminal.draw(|frame| {
-        frame.render_widget(widget.clone(), area);
+        if let Some(sel) = l.selected {
+            let mut state = ratatui::widgets::ListState::default();
+            state.select(Some(sel));
+            frame.render_stateful_widget(widget.clone(), area, &mut state);
+        } else {
+            frame.render_widget(widget.clone(), area);
+        }
     });
     res.is_ok()
 }
@@ -748,11 +796,11 @@ pub extern "C" fn ratatui_headless_render_tabs(width: u16, height: u16, t: *cons
 // ----- Simple Table (tab-separated cells) -----
 
 #[repr(C)]
-pub struct FfiTable { headers: Vec<String>, rows: Vec<Vec<String>>, block: Option<Block<'static>> }
+pub struct FfiTable { headers: Vec<String>, rows: Vec<Vec<String>>, block: Option<Block<'static>>, selected: Option<usize>, row_highlight_style: Option<Style>, highlight_symbol: Option<String> }
 
 #[no_mangle]
 pub extern "C" fn ratatui_table_new() -> *mut FfiTable {
-    Box::into_raw(Box::new(FfiTable { headers: Vec::new(), rows: Vec::new(), block: None }))
+    Box::into_raw(Box::new(FfiTable { headers: Vec::new(), rows: Vec::new(), block: None, selected: None, row_highlight_style: None, highlight_symbol: None }))
 }
 
 #[no_mangle]
@@ -795,6 +843,27 @@ pub extern "C" fn ratatui_table_set_block_title(tbl: *mut FfiTable, title_utf8: 
 }
 
 #[no_mangle]
+pub extern "C" fn ratatui_table_set_selected(tbl: *mut FfiTable, selected: i32) {
+    if tbl.is_null() { return; }
+    let t = unsafe { &mut *tbl };
+    t.selected = if selected < 0 { None } else { Some(selected as usize) };
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_table_set_row_highlight_style(tbl: *mut FfiTable, style: FfiStyle) {
+    if tbl.is_null() { return; }
+    let t = unsafe { &mut *tbl };
+    t.row_highlight_style = Some(style_from_ffi(style));
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_table_set_highlight_symbol(tbl: *mut FfiTable, sym_utf8: *const c_char) {
+    if tbl.is_null() { return; }
+    let t = unsafe { &mut *tbl };
+    t.highlight_symbol = if sym_utf8.is_null() { None } else { unsafe { CStr::from_ptr(sym_utf8) }.to_str().ok().map(|s| s.to_string()) };
+}
+
+#[no_mangle]
 pub extern "C" fn ratatui_terminal_draw_table_in(term: *mut FfiTerminal, tbl: *const FfiTable, rect: FfiRect) -> bool {
     if term.is_null() || tbl.is_null() { return false; }
     let t = unsafe { &mut *term };
@@ -814,9 +883,17 @@ pub extern "C" fn ratatui_terminal_draw_table_in(term: *mut FfiTerminal, tbl: *c
     let mut widget = Table::new(rows, widths);
     if let Some(hr) = header_row { widget = widget.header(hr); }
     if let Some(b) = &tb.block { widget = widget.block(b.clone()); }
+    if let Some(sty) = &tb.row_highlight_style { widget = widget.row_highlight_style(sty.clone()); }
+    if let Some(sym) = &tb.highlight_symbol { widget = widget.highlight_symbol(sym.clone()); }
 
     let res = t.terminal.draw(|frame| {
-        frame.render_widget(widget.clone(), area);
+        if let Some(sel) = tb.selected {
+            let mut state = ratatui::widgets::TableState::default();
+            state.select(Some(sel));
+            frame.render_stateful_widget(widget.clone(), area, &mut state);
+        } else {
+            frame.render_widget(widget.clone(), area);
+        }
     });
     res.is_ok()
 }

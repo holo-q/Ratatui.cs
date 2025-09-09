@@ -31,6 +31,27 @@ public sealed class List : IDisposable
         return this;
     }
 
+    public List Selected(int index)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiListSetSelected(_handle.DangerousGetHandle(), index);
+        return this;
+    }
+
+    public List HighlightStyle(Style style)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiListSetHighlightStyle(_handle.DangerousGetHandle(), style.ToFfi());
+        return this;
+    }
+
+    public List HighlightSymbol(string? symbol)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiListSetHighlightSymbol(_handle.DangerousGetHandle(), symbol);
+        return this;
+    }
+
     private void EnsureNotDisposed()
     {
         if (_disposed) throw new ObjectDisposedException(nameof(List));
@@ -43,4 +64,3 @@ public sealed class List : IDisposable
         _disposed = true;
     }
 }
-

@@ -143,6 +143,15 @@ internal static class Native
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawListIn(IntPtr term, IntPtr lst, FfiRect rect);
 
+    [DllImport(LibraryName, EntryPoint = "ratatui_list_set_selected", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiListSetSelected(IntPtr lst, int selected);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_list_set_highlight_style", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiListSetHighlightStyle(IntPtr lst, FfiStyle style);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_list_set_highlight_symbol", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiListSetHighlightSymbol(IntPtr lst, [MarshalAs(UnmanagedType.LPUTF8Str)] string? symbol);
+
     // Table (simple tab-separated API)
     [DllImport(LibraryName, EntryPoint = "ratatui_table_new", CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr RatatuiTableNew();
@@ -162,6 +171,15 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_table_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawTableIn(IntPtr term, IntPtr tbl, FfiRect rect);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_table_set_selected", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTableSetSelected(IntPtr tbl, int selected);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_table_set_row_highlight_style", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTableSetRowHighlightStyle(IntPtr tbl, FfiStyle style);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_table_set_highlight_symbol", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTableSetHighlightSymbol(IntPtr tbl, [MarshalAs(UnmanagedType.LPUTF8Str)] string? symbol);
 
     // Headless rendering
     [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_paragraph", CallingConvention = CallingConvention.Cdecl)]

@@ -40,6 +40,27 @@ public sealed class Table : IDisposable
         return this;
     }
 
+    public Table Selected(int index)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetSelected(_handle.DangerousGetHandle(), index);
+        return this;
+    }
+
+    public Table RowHighlightStyle(Style style)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetRowHighlightStyle(_handle.DangerousGetHandle(), style.ToFfi());
+        return this;
+    }
+
+    public Table HighlightSymbol(string? symbol)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetHighlightSymbol(_handle.DangerousGetHandle(), symbol);
+        return this;
+    }
+
     private void EnsureNotDisposed()
     {
         if (_disposed) throw new ObjectDisposedException(nameof(Table));
@@ -52,4 +73,3 @@ public sealed class Table : IDisposable
         _disposed = true;
     }
 }
-

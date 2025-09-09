@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Ratatui;
 
@@ -134,5 +136,21 @@ public sealed class Terminal : IDisposable
         if (_disposed) return;
         _handle.Dispose();
         _disposed = true;
+    }
+
+    public async IAsyncEnumerable<Event> Events(TimeSpan? pollInterval = null, [EnumeratorCancellation] System.Threading.CancellationToken cancellationToken = default)
+    {
+        var interval = pollInterval ?? TimeSpan.FromMilliseconds(50);
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (NextEvent(interval, out var ev) && ev.Kind != EventKind.None)
+            {
+                yield return ev;
+            }
+            else
+            {
+                await System.Threading.Tasks.Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 }
