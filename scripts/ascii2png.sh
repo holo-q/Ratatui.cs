@@ -13,7 +13,7 @@ for f in "${SRC_DIR}"/*.txt; do
   base=$(basename "$f" .txt)
   out="${OUT_DIR}/${base}.png"
   echo "[ascii2png] $f -> $out"
-  # Read file content and pass inline to avoid ImageMagick '@file' security policy
-  content=$(sed 's/"/\\"/g' "$f")
+  # Read file content, strip CRs, and pass inline to avoid ImageMagick '@file' security policy
+  content=$(tr -d '\r' < "$f" | sed 's/"/\\"/g')
   convert -font "$FONT" -pointsize "$POINT" -fill "$COLOR" -background "$BG" label:"$content" "$out"
 done
