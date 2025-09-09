@@ -38,7 +38,16 @@ public sealed class BarChart : IDisposable
         return this;
     }
 
+    public unsafe BarChart Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = titleUtf8)
+        {
+            Interop.Native.RatatuiBarChartSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
+        }
+        return this;
+    }
+
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(BarChart)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }
 }
-

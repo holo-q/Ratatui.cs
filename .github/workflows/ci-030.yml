@@ -1,0 +1,98 @@
+name: build-and-pack-0.30-alpha
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  workflow_dispatch:
+
+jobs:
+  native:
+    name: native-${{ matrix.rid }}-030
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            libname: libratatui_ffi.so
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            rid: win-x64
+            libname: ratatui_ffi.dll
+          - os: macos-14
+            rid: osx-arm64
+            libname: libratatui_ffi.dylib
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Switch FFI to 0.30 branch
+        run: |
+          git -C native/ratatui_ffi fetch --all
+          git -C native/ratatui_ffi checkout ratatui-0.30
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build native
+        working-directory: native/ratatui_ffi
+        run: |
+          if [ -n "${{ matrix.target }}" ]; then
+            rustup target add ${{ matrix.target }}
+            cargo build --release --target ${{ matrix.target }}
+          else
+            cargo build --release
+          fi
+      - name: Upload native artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.rid }}
+          path: |
+            native/ratatui_ffi/target/release/${{ matrix.libname }}
+            native/ratatui_ffi/target/${{ matrix.target }}/release/${{ matrix.libname }}
+
+  pack:
+    name: pack-nuget-030-alpha
+    runs-on: ubuntu-latest
+    needs: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Switch FFI to 0.30 branch
+        run: git -C native/ratatui_ffi checkout ratatui-0.30
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: native_out
+      - name: Prepare runtimes directory
+        run: |
+          mkdir -p src/Ratatui/runtimes/linux-x64/native
+          mkdir -p src/Ratatui/runtimes/win-x64/native
+          mkdir -p src/Ratatui/runtimes/osx-arm64/native
+          cp native_out/native-linux-x64/libratatui_ffi.so src/Ratatui/runtimes/linux-x64/native/ || true
+          cp native_out/native-win-x64/ratatui_ffi.dll src/Ratatui/runtimes/win-x64/native/ || true
+          cp native_out/native-osx-arm64/libratatui_ffi.dylib src/Ratatui/runtimes/osx-arm64/native/ || true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Pack alpha
+        run: |
+          VER=0.2.0-alpha.${{ github.run_number }}
+          dotnet pack src/Ratatui/Ratatui.csproj -c Release -o artifacts -p:PackageVersion=$VER
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-030-alpha
+          path: artifacts/*.nupkg
+      - name: Publish to GitHub Packages
+        env:
+          OWNER: ${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pkg in artifacts/*.nupkg; do
+            dotnet nuget push "$pkg" \
+              --source "https://nuget.pkg.github.com/${OWNER}/index.json" \
+              --api-key "$GITHUB_TOKEN" \
+              --skip-duplicate
+          done

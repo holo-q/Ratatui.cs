@@ -23,6 +23,16 @@ public sealed class Chart : IDisposable
         return this;
     }
 
+    public unsafe Chart Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = titleUtf8)
+        {
+            Interop.Native.RatatuiChartSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
+        }
+        return this;
+    }
+
     public Chart Axes(string? xTitle = null, string? yTitle = null)
     {
         EnsureNotDisposed();
