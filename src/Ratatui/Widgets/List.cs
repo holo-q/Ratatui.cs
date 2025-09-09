@@ -31,6 +31,16 @@ public sealed class List : IDisposable
         return this;
     }
 
+    public unsafe List AppendItem(ReadOnlySpan<byte> utf8, Style? style = null)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = utf8)
+        {
+            Interop.Native.RatatuiListAppendItemBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)utf8.Length, (style ?? default).ToFfi());
+        }
+        return this;
+    }
+
     public List Selected(int index)
     {
         EnsureNotDisposed();

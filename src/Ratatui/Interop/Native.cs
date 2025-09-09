@@ -192,6 +192,9 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_append_span", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphAppendSpan(IntPtr para, [MarshalAs(UnmanagedType.LPUTF8Str)] string text, FfiStyle style);
 
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_append_span_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiParagraphAppendSpanBytes(IntPtr para, IntPtr bytes, UIntPtr len, FfiStyle style);
+
     // List
     [DllImport(LibraryName, EntryPoint = "ratatui_list_new", CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr RatatuiListNew();
@@ -201,6 +204,9 @@ internal static class Native
 
     [DllImport(LibraryName, EntryPoint = "ratatui_list_append_item", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiListAppendItem(IntPtr lst, [MarshalAs(UnmanagedType.LPUTF8Str)] string text, FfiStyle style);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_list_append_item_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiListAppendItemBytes(IntPtr lst, IntPtr bytes, UIntPtr len, FfiStyle style);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_list_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiListSetBlockTitle(IntPtr lst, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
@@ -228,8 +234,14 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_table_set_headers", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableSetHeaders(IntPtr tbl, [MarshalAs(UnmanagedType.LPUTF8Str)] string headersTsv);
 
+    [DllImport(LibraryName, EntryPoint = "ratatui_table_set_headers_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTableSetHeadersBytes(IntPtr tbl, IntPtr bytes, UIntPtr len);
+
     [DllImport(LibraryName, EntryPoint = "ratatui_table_append_row", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableAppendRow(IntPtr tbl, [MarshalAs(UnmanagedType.LPUTF8Str)] string rowTsv);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_table_append_row_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTableAppendRowBytes(IntPtr tbl, IntPtr bytes, UIntPtr len);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_table_set_column_percents", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableSetColumnPercents(IntPtr tbl, ushort[] percents, UIntPtr len);

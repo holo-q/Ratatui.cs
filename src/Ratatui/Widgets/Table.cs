@@ -32,11 +32,31 @@ public sealed class Table : IDisposable
         return this;
     }
 
+    public unsafe Table Headers(ReadOnlySpan<byte> headersTsvUtf8)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = headersTsvUtf8)
+        {
+            Interop.Native.RatatuiTableSetHeadersBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)headersTsvUtf8.Length);
+        }
+        return this;
+    }
+
     public Table AppendRow(params string[] cells)
     {
         EnsureNotDisposed();
         var tsv = string.Join("\t", cells ?? Array.Empty<string>());
         Interop.Native.RatatuiTableAppendRow(_handle.DangerousGetHandle(), tsv);
+        return this;
+    }
+
+    public unsafe Table AppendRow(ReadOnlySpan<byte> rowTsvUtf8)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = rowTsvUtf8)
+        {
+            Interop.Native.RatatuiTableAppendRowBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)rowTsvUtf8.Length);
+        }
         return this;
     }
 
