@@ -124,7 +124,9 @@ jobs:
         working-directory: native/ratatui_ffi
         env:
           RUSTFLAGS: -C target-feature=-crt-static
-        run: cargo zigbuild --release --target aarch64-unknown-linux-musl
+        run: |
+          rustup target add aarch64-unknown-linux-musl
+          cargo zigbuild --release --target aarch64-unknown-linux-musl
       - name: Upload artifact linux-musl-arm64
         uses: actions/upload-artifact@v4
         with:
@@ -144,7 +146,9 @@ jobs:
         with:
           path: native_out
       - name: Prepare runtimes directory
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p src/Ratatui/runtimes/linux-x64/native
           mkdir -p src/Ratatui/runtimes/linux-arm64/native
           mkdir -p src/Ratatui/runtimes/linux-musl-x64/native
@@ -153,14 +157,15 @@ jobs:
           mkdir -p src/Ratatui/runtimes/win-arm64/native
           mkdir -p src/Ratatui/runtimes/osx-x64/native
           mkdir -p src/Ratatui/runtimes/osx-arm64/native
-          cp native_out/native-linux-x64/libratatui_ffi.so src/Ratatui/runtimes/linux-x64/native/ || true
-          cp native_out/native-linux-arm64/libratatui_ffi.so src/Ratatui/runtimes/linux-arm64/native/ || true
-          cp native_out/native-linux-musl-x64/libratatui_ffi.so src/Ratatui/runtimes/linux-musl-x64/native/ || true
-          cp native_out/native-linux-musl-arm64/libratatui_ffi.so src/Ratatui/runtimes/linux-musl-arm64/native/ || true
-          cp native_out/native-win-x64/ratatui_ffi.dll src/Ratatui/runtimes/win-x64/native/ || true
-          cp native_out/native-win-arm64/ratatui_ffi.dll src/Ratatui/runtimes/win-arm64/native/ || true
-          cp native_out/native-osx-x64/libratatui_ffi.dylib src/Ratatui/runtimes/osx-x64/native/ || true
-          cp native_out/native-osx-arm64/libratatui_ffi.dylib src/Ratatui/runtimes/osx-arm64/native/ || true
+          copy_first() { local dir="$1" name="$2" dest="$3"; local f; f=$(find "$dir" -type f -name "$name" | head -n1 || true); if [ -n "${f:-}" ]; then cp "$f" "$dest/"; else echo "warn: not found: $name in $dir"; fi; }
+          copy_first native_out/native-linux-x64 libratatui_ffi.so src/Ratatui/runtimes/linux-x64/native
+          copy_first native_out/native-linux-arm64 libratatui_ffi.so src/Ratatui/runtimes/linux-arm64/native
+          copy_first native_out/native-linux-musl-x64 libratatui_ffi.so src/Ratatui/runtimes/linux-musl-x64/native
+          copy_first native_out/native-linux-musl-arm64 libratatui_ffi.so src/Ratatui/runtimes/linux-musl-arm64/native
+          copy_first native_out/native-win-x64 ratatui_ffi.dll src/Ratatui/runtimes/win-x64/native
+          copy_first native_out/native-win-arm64 ratatui_ffi.dll src/Ratatui/runtimes/win-arm64/native
+          copy_first native_out/native-osx-x64 libratatui_ffi.dylib src/Ratatui/runtimes/osx-x64/native
+          copy_first native_out/native-osx-arm64 libratatui_ffi.dylib src/Ratatui/runtimes/osx-arm64/native
       - name: Guard required runtimes exist
         run: |
           set -e
