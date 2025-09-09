@@ -28,10 +28,14 @@ case "$RID" in
 esac
 
 echo "[snap-local] Running Snapshots example…"
-dotnet run --project examples/Snapshots/Snapshots.csproj -c Release
+# Prefer net9.0 if present, otherwise net8.0
+TFM="net9.0"
+if ! dotnet --list-runtimes 2>/dev/null | grep -q '^Microsoft.NETCore.App 9\.'; then
+  TFM="net8.0"
+fi
+dotnet run --project examples/Snapshots/Snapshots.csproj -c Release -f "$TFM"
 
 echo "[snap-local] Converting to PNG…"
 ./scripts/ascii2png.sh artifacts/snapshots artifacts/snapshots
 
 echo "[snap-local] Done. Open artifacts/snapshots in your image viewer."
-
