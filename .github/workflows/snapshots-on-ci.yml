@@ -11,12 +11,12 @@ permissions:
 
 jobs:
   generate-and-commit:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: main
           submodules: recursive
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
@@ -48,12 +48,9 @@ jobs:
           set -e
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          # Ensure we are on main at the build's head commit
-          git checkout ${{ github.event.workflow_run.head_sha }}
-          git branch -f main ${{ github.event.workflow_run.head_sha }}
           git checkout main
           mkdir -p docs/assets/snapshots
           cp -f artifacts/snapshots/*.png docs/assets/snapshots/
           git add docs/assets/snapshots/*.png || true
-          git commit -m "docs(snapshots): update PNG snapshots for ${{ github.event.workflow_run.head_sha }} [skip ci]" || echo "No changes to commit"
+          git commit -m "docs(snapshots): update PNG snapshots [skip ci]" || echo "No changes to commit"
           git push origin main
