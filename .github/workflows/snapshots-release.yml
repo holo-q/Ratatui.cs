@@ -26,9 +26,10 @@ jobs:
         run: |
           mkdir -p examples/Snapshots/runtimes/linux-x64/native
           cp native/ratatui_ffi/target/release/libratatui_ffi.so examples/Snapshots/runtimes/linux-x64/native/
-      - name: Run snapshots
+      - name: Run snapshots (net9 preferred)
         run: |
-          dotnet run --project examples/Snapshots/Snapshots.csproj -c Release
+          dotnet run --project examples/Snapshots/Snapshots.csproj -c Release -f net9.0 || \
+          dotnet run --project examples/Snapshots/Snapshots.csproj -c Release -f net8.0
       - name: Install ImageMagick + fonts
         run: |
           sudo apt-get update
