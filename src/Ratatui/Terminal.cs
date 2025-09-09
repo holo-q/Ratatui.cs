@@ -1,0 +1,114 @@
+using System;
+
+namespace Ratatui;
+
+public sealed class Terminal : IDisposable
+{
+    private readonly TerminalHandle _handle;
+    private bool _disposed;
+
+    public Terminal()
+    {
+        // Force static ctor of Native to run and set resolver
+        var _ = typeof(Interop.Native);
+
+        var ptr = Interop.Native.RatatuiInitTerminal();
+        if (ptr == IntPtr.Zero)
+            throw new InvalidOperationException("Failed to initialize Ratatui terminal");
+        _handle = TerminalHandle.FromRaw(ptr);
+    }
+
+    public void Clear()
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTerminalClear(_handle.DangerousGetHandle());
+    }
+
+    public void Draw(Paragraph paragraph)
+    {
+        EnsureNotDisposed();
+        if (paragraph is null) throw new ArgumentNullException(nameof(paragraph));
+        var ok = Interop.Native.RatatuiTerminalDrawParagraph(_handle.DangerousGetHandle(), paragraph.DangerousHandle);
+        if (!ok)
+            throw new InvalidOperationException("Draw failed");
+    }
+
+    public (int Width, int Height) Size()
+    {
+        EnsureNotDisposed();
+        if (!Interop.Native.RatatuiTerminalSize(out var w, out var h))
+            throw new InvalidOperationException("Failed to get terminal size");
+        return (w, h);
+    }
+
+    public void Draw(Paragraph paragraph, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (paragraph is null) throw new ArgumentNullException(nameof(paragraph));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawParagraphIn(_handle.DangerousGetHandle(), paragraph.DangerousHandle, r);
+        if (!ok)
+            throw new InvalidOperationException("DrawIn failed");
+    }
+
+    public void Draw(Paragraph paragraph, Vec2i pos, Vec2i size)
+        => Draw(paragraph, Rect.From(pos, size));
+
+    public void Draw(List list, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawListIn(_handle.DangerousGetHandle(), list.DangerousHandle, r);
+        if (!ok)
+            throw new InvalidOperationException("DrawList failed");
+    }
+
+    public void Draw(List list, Vec2i pos, Vec2i size)
+        => Draw(list, Rect.From(pos, size));
+
+    public void Draw(Table table, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (table is null) throw new ArgumentNullException(nameof(table));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawTableIn(_handle.DangerousGetHandle(), table.DangerousHandle, r);
+        if (!ok)
+            throw new InvalidOperationException("DrawTable failed");
+    }
+
+    public void Draw(Table table, Vec2i pos, Vec2i size)
+        => Draw(table, Rect.From(pos, size));
+
+    public bool NextEvent(TimeSpan timeout, out Event ev)
+    {
+        EnsureNotDisposed();
+        if (Interop.Native.RatatuiNextEvent((ulong)timeout.TotalMilliseconds, out var fe))
+        {
+            ev = Event.FromFfi(fe);
+            return ev.Kind != EventKind.None;
+        }
+        ev = default;
+        return false;
+    }
+
+    public void DrawFrame(params DrawCommand[] commands)
+    {
+        EnsureNotDisposed();
+        var ffi = DrawCommand.ToFfi(commands);
+        var ok = Interop.Native.RatatuiTerminalDrawFrame(_handle.DangerousGetHandle(), ffi, (UIntPtr)ffi.Length);
+        if (!ok) throw new InvalidOperationException("DrawFrame failed");
+    }
+
+    private void EnsureNotDisposed()
+    {
+        if (_disposed) throw new ObjectDisposedException(nameof(Terminal));
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _handle.Dispose();
+        _disposed = true;
+    }
+}
