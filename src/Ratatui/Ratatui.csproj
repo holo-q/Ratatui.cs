@@ -20,6 +20,5 @@
     <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Widgets/Chart.cs" />
   </ItemGroup>
 </Project>

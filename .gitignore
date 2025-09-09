@@ -8,6 +8,7 @@ target/
 
 # Native outputs copied for packing (produced by CI)
 src/Ratatui/runtimes/
+artifacts/
 
 # OS/editor junk
 .DS_Store
