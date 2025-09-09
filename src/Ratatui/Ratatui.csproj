@@ -15,9 +15,11 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" />
+    <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
