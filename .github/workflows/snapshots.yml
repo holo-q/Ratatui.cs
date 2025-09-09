@@ -17,7 +17,7 @@ jobs:
           cargo build --release
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
       - name: Place native library for sample
         run: |
           mkdir -p examples/Snapshots/runtimes/linux-x64/native
