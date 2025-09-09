@@ -174,6 +174,14 @@ public sealed class Terminal : IDisposable
         if (!ok) throw new InvalidOperationException("DrawFrame failed");
     }
 
+    public void DrawFrame(ReadOnlySpan<DrawCommand> commands)
+    {
+        EnsureNotDisposed();
+        var ffi = DrawCommand.ToFfi(commands);
+        var ok = Interop.Native.RatatuiTerminalDrawFrame(_handle.DangerousGetHandle(), ffi, (UIntPtr)ffi.Length);
+        if (!ok) throw new InvalidOperationException("DrawFrame failed");
+    }
+
     private void EnsureNotDisposed()
     {
         if (_disposed) throw new ObjectDisposedException(nameof(Terminal));

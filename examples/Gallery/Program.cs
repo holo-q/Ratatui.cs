@@ -37,7 +37,7 @@ class Program
         using var chart = new Chart()
             .Title("Chart")
             .Axes("x","y").AxesBounds(0,2,0,3)
-            .Line("L1", new [] { (0.0,1.0), (1.0,2.5), (2.0,1.2) });
+            .Line("L1", (ReadOnlySpan<(double,double)>)new (double,double)[] { (0.0,1.0), (1.0,2.5), (2.0,1.2) });
 
         var (w,h) = term.Size();
         var rect = new Rect(0,0,w,Math.Max(20,h));

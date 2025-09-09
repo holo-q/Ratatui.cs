@@ -41,9 +41,44 @@ public sealed class Chart : IDisposable
     {
         EnsureNotDisposed();
         if (points == null || points.Count == 0) return this;
-        var flat = new double[points.Count * 2];
-        for (int i = 0; i < points.Count; i++) { flat[i*2] = points[i].x; flat[i*2+1] = points[i].y; }
-        Interop.Native.RatatuiChartAddLine(_handle.DangerousGetHandle(), name, flat, (UIntPtr)points.Count, (style ?? default).ToFfi());
+        var count = points.Count;
+        double[] flat = System.Buffers.ArrayPool<double>.Shared.Rent(count * 2);
+        try
+        {
+            for (int i = 0; i < count; i++) { flat[i*2] = points[i].x; flat[i*2+1] = points[i].y; }
+            Interop.Native.RatatuiChartAddLine(_handle.DangerousGetHandle(), name, flat, (UIntPtr)count, (style ?? default).ToFfi());
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<double>.Shared.Return(flat);
+        }
+        return this;
+    }
+
+    public Chart Line(string name, ReadOnlySpan<(double x, double y)> points, Style? style = null)
+    {
+        EnsureNotDisposed();
+        if (points.IsEmpty) return this;
+        var count = points.Length;
+        if (count * 2 <= 256)
+        {
+            Span<double> flat = stackalloc double[count * 2];
+            for (int i = 0; i < count; i++) { flat[i*2] = points[i].x; flat[i*2+1] = points[i].y; }
+            Interop.Native.RatatuiChartAddLine(_handle.DangerousGetHandle(), name, flat.ToArray(), (UIntPtr)count, (style ?? default).ToFfi());
+        }
+        else
+        {
+            double[] array = System.Buffers.ArrayPool<double>.Shared.Rent(count * 2);
+            try
+            {
+                for (int i = 0; i < count; i++) { array[i*2] = points[i].x; array[i*2+1] = points[i].y; }
+                Interop.Native.RatatuiChartAddLine(_handle.DangerousGetHandle(), name, array, (UIntPtr)count, (style ?? default).ToFfi());
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<double>.Shared.Return(array);
+            }
+        }
         return this;
     }
 
