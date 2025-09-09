@@ -34,6 +34,13 @@ Using via NuGet (CI-packaged)
 - It then packs a NuGet with RID-specific native assets under `runtimes/<rid>/native/`.
 - After a successful run, download the `.nupkg` from the workflow artifacts or releases and reference it in your project.
 
+Publishing and feeds
+- GitHub Packages (default): the CI publishes on tags (vX.Y.Z) and on main/master to `https://nuget.pkg.github.com/holo-q/index.json`.
+  - Add the source (once):
+    - `dotnet nuget add source https://nuget.pkg.github.com/holo-q/index.json -n holo-q -u <github-username> -p <github-personal-access-token> --store-password-in-clear-text`
+  - Install: `dotnet add package Ratatui.cs --version <x.y.z>`
+- nuget.org (optional): if `NUGET_API_KEY` is set in repo secrets, tags publish to nuget.org as well.
+
 API sketch
 ```csharp
 using Ratatui;
@@ -63,7 +70,7 @@ CI: Build native + pack NuGet
 - Jobs:
   - Build native per RID (linux-x64, win-x64, osx-x64, osx-arm64) and upload artifacts.
   - Pack job downloads all artifacts, copies them into `src/Ratatui/runtimes/<rid>/native/`, and runs `dotnet pack`.
-  - Outputs a `.nupkg` under `artifacts/`.
+  - Outputs a `.nupkg` under `artifacts/`; publishes to GitHub Packages on tags and main; optionally to nuget.org on tags.
 
 Notes
 - Native library name: `ratatui_ffi` (`libratatui_ffi.so`/`.dylib` or `ratatui_ffi.dll`).

@@ -7,11 +7,11 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>Ratatui</AssemblyName>
     <RootNamespace>Ratatui</RootNamespace>
-    <PackageId>Ratatui</PackageId>
-    <Authors>Ratatui.cs</Authors>
-    <RepositoryUrl>https://github.com/yourorg/Ratatui.cs</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/yourorg/Ratatui.cs</PackageProjectUrl>
-    <Description>C# bindings for Ratatui (Rust TUI)</Description>
+    <PackageId>Ratatui.cs</PackageId>
+    <Authors>holo-q</Authors>
+    <RepositoryUrl>https://github.com/holo-q/ratatui-cs</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/holo-q/ratatui-cs</PackageProjectUrl>
+    <Description>C# bindings for Ratatui (Rust TUI) with headless testing, events, and batching.</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

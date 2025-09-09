@@ -1,5 +1,9 @@
 name: build-and-pack
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: [ main, master ]
@@ -75,3 +79,26 @@ jobs:
         with:
           name: nuget
           path: artifacts/*.nupkg
+      - name: Publish to GitHub Packages (tag or main)
+        if: ${{ github.ref_type == 'tag' || github.ref_name == 'main' || github.ref_name == 'master' }}
+        env:
+          OWNER: ${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pkg in artifacts/*.nupkg; do
+            dotnet nuget push "$pkg" \
+              --source "https://nuget.pkg.github.com/${OWNER}/index.json" \
+              --api-key "$GITHUB_TOKEN" \
+              --skip-duplicate
+          done
+      - name: Publish to nuget.org (tags only)
+        if: ${{ github.ref_type == 'tag' && secrets.NUGET_API_KEY != '' }}
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          for pkg in artifacts/*.nupkg; do
+            dotnet nuget push "$pkg" \
+              --source "https://api.nuget.org/v3/index.json" \
+              --api-key "$NUGET_API_KEY" \
+              --skip-duplicate
+          done
