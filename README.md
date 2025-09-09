@@ -1,5 +1,9 @@
 Ratatui.cs — C# bindings for Ratatui (Rust TUI)
 
+![CI](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml/badge.svg)
+[![NuGet](https://img.shields.io/nuget/v/Ratatui.cs.svg?logo=nuget&label=NuGet)](https://www.nuget.org/packages/Ratatui.cs)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Ratatui.cs.svg?logo=nuget)](https://www.nuget.org/packages/Ratatui.cs)
+
 What this is
 - Native Rust cdylib (`native/ratatui_ffi`) with a stable C ABI over Ratatui.
 - Idiomatic .NET library (`src/Ratatui`) with SafeHandles and builders.

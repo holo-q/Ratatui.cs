@@ -72,7 +72,7 @@ jobs:
       - name: Pack
         run: |
           VER=${{ github.ref_name }}
-          if [[ "$VER" != v* ]]; then VER=0.1.0-ci.${{ github.run_number }}; fi
+          if [[ "$VER" == v* ]]; then VER=${VER#v}; else VER=0.1.0-ci.${{ github.run_number }}; fi
           dotnet pack src/Ratatui/Ratatui.csproj -c Release -o artifacts -p:PackageVersion=$VER
       - name: Upload package
         uses: actions/upload-artifact@v4
