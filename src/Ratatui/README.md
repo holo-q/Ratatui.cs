@@ -99,3 +99,8 @@ Links
 License
 
 MIT
+
+Comparison
+
+- Spectre.Console: great for rich text, tables, and prompts when building traditional CLI tools. Ratatui.cs is focused on interactive TUI applications with a retained widget tree, real‑time rendering, and headless snapshot testing.
+- Terminal.Gui: mature C# TUI. Ratatui.cs taps into Rust Ratatui for performance and feature coverage, while exposing an idiomatic C# API and prebuilt native binaries for Windows, Linux, and macOS.

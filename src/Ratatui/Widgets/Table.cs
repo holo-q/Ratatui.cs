@@ -40,6 +40,15 @@ public sealed class Table : IDisposable
         return this;
     }
 
+    public Table ColumnPercents(params ushort[] percents)
+    {
+        EnsureNotDisposed();
+        var vals = percents ?? Array.Empty<ushort>();
+        if (vals.Length == 0) return this;
+        Interop.Native.RatatuiTableSetColumnPercents(_handle.DangerousGetHandle(), vals, (UIntPtr)vals.Length);
+        return this;
+    }
+
     public Table Selected(int index)
     {
         EnsureNotDisposed();

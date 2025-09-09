@@ -19,6 +19,7 @@
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>ratatui-icon.png</PackageIcon>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -26,10 +27,12 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
+    <PackageReleaseNotes>Ratatui.cs: .NET/C# Terminal UI bindings for Rust Ratatui with widgets, events, batched frames, and headless testing. Cross-platform native binaries for Windows, Linux, macOS.</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" />
     <None Include="README.md" Pack="true" PackagePath="" />
+    <None Include="ratatui-icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />

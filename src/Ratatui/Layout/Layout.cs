@@ -49,5 +49,22 @@ public static class Layout
         }
         return result;
     }
-}
 
+    public static IReadOnlyList<Rect> SplitColumnsEven(Rect area, int count, int gap = 0, int margin = 0)
+    {
+        if (count <= 0) return Array.Empty<Rect>();
+        var pct = 100 / Math.Max(1, count);
+        Span<Constraint> cs = count <= 16 ? stackalloc Constraint[Math.Max(1, count)] : new Constraint[count];
+        for (int i = 0; i < count; i++) cs[i] = Constraint.Percentage(pct);
+        return SplitVertical(area, cs, gap, margin);
+    }
+
+    public static IReadOnlyList<Rect> SplitRowsEven(Rect area, int count, int gap = 0, int margin = 0)
+    {
+        if (count <= 0) return Array.Empty<Rect>();
+        var pct = 100 / Math.Max(1, count);
+        Span<Constraint> cs = count <= 16 ? stackalloc Constraint[Math.Max(1, count)] : new Constraint[count];
+        for (int i = 0; i < count; i++) cs[i] = Constraint.Percentage(pct);
+        return SplitHorizontal(area, cs, gap, margin);
+    }
+}

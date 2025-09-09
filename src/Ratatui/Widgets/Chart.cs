@@ -30,6 +30,13 @@ public sealed class Chart : IDisposable
         return this;
     }
 
+    public Chart AxesBounds(double xMin, double xMax, double yMin, double yMax)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiChartSetAxesBounds(_handle.DangerousGetHandle(), xMin, xMax, yMin, yMax);
+        return this;
+    }
+
     public Chart Line(string name, IReadOnlyList<(double x, double y)> points, Style? style = null)
     {
         EnsureNotDisposed();
@@ -43,4 +50,3 @@ public sealed class Chart : IDisposable
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Chart)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }
 }
-

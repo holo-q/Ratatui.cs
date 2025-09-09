@@ -32,6 +32,20 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
+    public Paragraph Align(Alignment alignment)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiParagraphSetAlignment(_handle.DangerousGetHandle(), (uint)alignment);
+        return this;
+    }
+
+    public Paragraph Wrap(bool trim = true)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiParagraphSetWrap(_handle.DangerousGetHandle(), trim);
+        return this;
+    }
+
     private void EnsureNotDisposed()
     {
         if (_disposed) throw new ObjectDisposedException(nameof(Paragraph));
@@ -43,4 +57,11 @@ public sealed class Paragraph : IDisposable
         _handle.Dispose();
         _disposed = true;
     }
+}
+
+public enum Alignment : uint
+{
+    Left = 0,
+    Center = 1,
+    Right = 2,
 }

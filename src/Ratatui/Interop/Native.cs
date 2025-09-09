@@ -139,6 +139,12 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphSetBlockTitle(IntPtr para, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
 
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_alignment", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiParagraphSetAlignment(IntPtr para, uint align);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_wrap", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiParagraphSetWrap(IntPtr para, [MarshalAs(UnmanagedType.I1)] bool trim);
+
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_free", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphFree(IntPtr para);
 
@@ -218,6 +224,9 @@ internal static class Native
 
     [DllImport(LibraryName, EntryPoint = "ratatui_table_append_row", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableAppendRow(IntPtr tbl, [MarshalAs(UnmanagedType.LPUTF8Str)] string rowTsv);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_table_set_column_percents", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTableSetColumnPercents(IntPtr tbl, ushort[] percents, UIntPtr len);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_table_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableSetBlockTitle(IntPtr tbl, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
@@ -374,6 +383,8 @@ internal static class Native
     internal static extern void RatatuiChartAddLine(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, double[] pointsXY, UIntPtr lenPairs, FfiStyle style);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_axes_titles", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiChartSetAxesTitles(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string? xTitle, [MarshalAs(UnmanagedType.LPUTF8Str)] string? yTitle);
+    [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_axes_bounds", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiChartSetAxesBounds(IntPtr c, double xMin, double xMax, double yMin, double yMax);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiChartSetBlockTitle(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_chart_in", CallingConvention = CallingConvention.Cdecl)]

@@ -61,7 +61,8 @@ Local dev (build from source)
 1) Build native
    - `cd native/ratatui_ffi && cargo build` (or `cargo build --release`)
 2) Run examples
-   - Interactive: `dotnet run --project examples/Hello/Hello.csproj`
+   - Interactive hello: `dotnet run --project examples/Hello/Hello.csproj`
+   - Interactive gallery (tabs + list + table + gauge + sparkline): `dotnet run --project examples/Gallery/Gallery.csproj`
    - Headless snapshots: `dotnet run --project examples/Smoke/Smoke.csproj`
    - Composite headless: `dotnet run --project examples/SmokeFrame/SmokeFrame.csproj`
    - If you see DllNotFoundException, point the loader to your native build:
@@ -86,3 +87,7 @@ Notes
 - Native library name: `ratatui_ffi` (`libratatui_ffi.so`/`.dylib` or `ratatui_ffi.dll`).
 - Loader search order: application base, `runtimes/<rid>/native/`, dev `native/ratatui_ffi/target/{debug,release}`, or `RATATUI_FFI_DIR`.
 - Layout: simple C# helpers in `Ratatui.Layout`. For full parity, use Rect math or add your own helpers as needed.
+
+Comparison
+- Spectre.Console: fantastic for rich console output (tables, markup, prompts). Ratatui.cs targets interactive, real‑time TUIs with a retained‑mode widget model, robust layout, and headless snapshot testing. If you need a dynamic dashboard or app‑like terminal UI, Ratatui.cs shines.
+- Terminal.Gui: pure C# and proven. Ratatui.cs leverages the high‑performance Rust Ratatui engine via FFI for fast rendering, a wide widget set, and deterministic headless tests. Choose Ratatui.cs for cross‑platform speed and CI‑friendly rendering.
