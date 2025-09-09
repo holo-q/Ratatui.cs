@@ -198,7 +198,7 @@ internal static class Native
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiHeadlessRenderTable(ushort width, ushort height, IntPtr table, out IntPtr utf8Text);
 
-    internal enum FfiWidgetKind : uint { Paragraph = 1, List = 2, Table = 3, Gauge = 4, Tabs = 5 }
+    internal enum FfiWidgetKind : uint { Paragraph = 1, List = 2, Table = 3, Gauge = 4, Tabs = 5, BarChart = 6, Sparkline = 7, Scrollbar = 8 }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct FfiDrawCmd { public uint Kind; public IntPtr Handle; public FfiRect Rect; }
@@ -259,4 +259,55 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_tabs", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiHeadlessRenderTabs(ushort width, ushort height, IntPtr t, out IntPtr utf8Text);
+
+    // BarChart
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern IntPtr RatatuiBarChartNew();
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_free", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartFree(IntPtr b);
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_values", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartSetValues(IntPtr b, ulong[] values, UIntPtr len);
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_labels", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartSetLabels(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string tsv);
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartSetBlockTitle(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_barchart_in", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiTerminalDrawBarChartIn(IntPtr term, IntPtr b, FfiRect rect);
+    [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_barchart", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiHeadlessRenderBarChart(ushort width, ushort height, IntPtr b, out IntPtr utf8Text);
+
+    // Sparkline
+    [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern IntPtr RatatuiSparklineNew();
+    [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_free", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiSparklineFree(IntPtr s);
+    [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_set_values", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiSparklineSetValues(IntPtr s, ulong[] values, UIntPtr len);
+    [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_set_block_title", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiSparklineSetBlockTitle(IntPtr s, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_sparkline_in", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiTerminalDrawSparklineIn(IntPtr term, IntPtr s, FfiRect rect);
+    [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_sparkline", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiHeadlessRenderSparkline(ushort width, ushort height, IntPtr s, out IntPtr utf8Text);
+
+    // Scrollbar
+    internal enum FfiScrollbarOrient : uint { Vertical = 0, Horizontal = 1 }
+    [DllImport(LibraryName, EntryPoint = "ratatui_scrollbar_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern IntPtr RatatuiScrollbarNew();
+    [DllImport(LibraryName, EntryPoint = "ratatui_scrollbar_free", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiScrollbarFree(IntPtr s);
+    [DllImport(LibraryName, EntryPoint = "ratatui_scrollbar_configure", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiScrollbarConfigure(IntPtr s, uint orient, ushort position, ushort contentLen, ushort viewportLen);
+    [DllImport(LibraryName, EntryPoint = "ratatui_scrollbar_set_block_title", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiScrollbarSetBlockTitle(IntPtr s, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_scrollbar_in", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiTerminalDrawScrollbarIn(IntPtr term, IntPtr s, FfiRect rect);
+    [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_scrollbar", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiHeadlessRenderScrollbar(ushort width, ushort height, IntPtr s, out IntPtr utf8Text);
 }

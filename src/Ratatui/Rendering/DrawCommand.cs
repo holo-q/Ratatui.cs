@@ -23,6 +23,9 @@ public readonly struct DrawCommand
     public static DrawCommand Table(Table t, Rect rect) => new(Interop.Native.FfiWidgetKind.Table, t.DangerousHandle, rect);
     public static DrawCommand Gauge(Gauge g, Rect rect) => new(Interop.Native.FfiWidgetKind.Gauge, g.DangerousHandle, rect);
     public static DrawCommand Tabs(Tabs t, Rect rect) => new(Interop.Native.FfiWidgetKind.Tabs, t.DangerousHandle, rect);
+    public static DrawCommand BarChart(BarChart b, Rect rect) => new(Interop.Native.FfiWidgetKind.BarChart, b.DangerousHandle, rect);
+    public static DrawCommand Sparkline(Sparkline s, Rect rect) => new(Interop.Native.FfiWidgetKind.Sparkline, s.DangerousHandle, rect);
+    public static DrawCommand Scrollbar(Scrollbar sb, Rect rect) => new(Interop.Native.FfiWidgetKind.Scrollbar, sb.DangerousHandle, rect);
 
     internal static Interop.Native.FfiDrawCmd[] ToFfi(ReadOnlySpan<DrawCommand> cmds)
     {

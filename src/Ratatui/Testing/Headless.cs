@@ -64,4 +64,31 @@ public static class Headless
         try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
         finally { Interop.Native.RatatuiStringFree(ptr); }
     }
+
+    public static string RenderBarChart(int width, int height, BarChart b)
+    {
+        if (b is null) throw new ArgumentNullException(nameof(b));
+        var ok = Interop.Native.RatatuiHeadlessRenderBarChart((ushort)width, (ushort)height, b.DangerousHandle, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless bar chart render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
+
+    public static string RenderSparkline(int width, int height, Sparkline s)
+    {
+        if (s is null) throw new ArgumentNullException(nameof(s));
+        var ok = Interop.Native.RatatuiHeadlessRenderSparkline((ushort)width, (ushort)height, s.DangerousHandle, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless sparkline render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
+
+    public static string RenderScrollbar(int width, int height, Scrollbar s)
+    {
+        if (s is null) throw new ArgumentNullException(nameof(s));
+        var ok = Interop.Native.RatatuiHeadlessRenderScrollbar((ushort)width, (ushort)height, s.DangerousHandle, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless scrollbar render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
 }

@@ -12,7 +12,7 @@ use ratatui::layout::{Rect, Constraint};
 use ratatui::buffer::Buffer;
 use ratatui::prelude::*;
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Table, Row, Cell, Gauge, Tabs};
+use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Table, Row, Cell, Gauge, Tabs, BarChart as RtBarChart, Sparkline as RtSparkline, Scrollbar as RtScrollbar, ScrollbarOrientation as RtScrollbarOrientation, ScrollbarState as RtScrollbarState};
 
 #[repr(C)]
 pub struct FfiTerminal {
@@ -39,6 +39,18 @@ pub struct FfiGauge { ratio: f32, label: Option<String>, block: Option<Block<'st
 
 #[repr(C)]
 pub struct FfiTabs { titles: Vec<String>, selected: u16, block: Option<Block<'static>> }
+
+#[repr(C)]
+pub struct FfiBarChart { values: Vec<u64>, labels: Vec<String>, block: Option<Block<'static>> }
+
+#[repr(C)]
+pub struct FfiSparkline { values: Vec<u64>, block: Option<Block<'static>> }
+
+#[repr(u32)]
+pub enum FfiScrollbarOrient { Vertical = 0, Horizontal = 1 }
+
+#[repr(C)]
+pub struct FfiScrollbar { orient: u32, position: u16, content_len: u16, viewport_len: u16, block: Option<Block<'static>> }
 
 #[repr(C)]
 pub struct FfiRect { pub x: u16, pub y: u16, pub width: u16, pub height: u16 }
@@ -403,7 +415,7 @@ pub extern "C" fn ratatui_headless_render_table(
 }
 
 #[repr(u32)]
-pub enum FfiWidgetKind { Paragraph = 1, List = 2, Table = 3, Gauge = 4, Tabs = 5 }
+pub enum FfiWidgetKind { Paragraph = 1, List = 2, Table = 3, Gauge = 4, Tabs = 5, BarChart = 6, Sparkline = 7, Scrollbar = 8 }
 // extend kinds for new widgets
 
 #[repr(C)]
@@ -454,6 +466,30 @@ fn render_cmd_to_buffer(cmd: &FfiDrawCmd, buf: &mut Buffer) {
             let mut w = Tabs::new(titles).select(t.selected as usize);
             if let Some(b) = &t.block { w = w.block(b.clone()); }
             ratatui::widgets::Widget::render(w, area, buf);
+        }
+        x if x == FfiWidgetKind::BarChart as u32 => {
+            if cmd.handle.is_null() { return; }
+            let bc = unsafe { &*(cmd.handle as *const FfiBarChart) };
+            let area = area; // reuse
+            let data: Vec<(&str, u64)> = bc.labels.iter().map(|s| s.as_str()).zip(bc.values.iter().cloned()).collect();
+            let mut w = RtBarChart::default().data(&data);
+            if let Some(b) = &bc.block { w = w.block(b.clone()); }
+            ratatui::widgets::Widget::render(w, area, buf);
+        }
+        x if x == FfiWidgetKind::Sparkline as u32 => {
+            if cmd.handle.is_null() { return; }
+            let sp = unsafe { &*(cmd.handle as *const FfiSparkline) };
+            let mut w = RtSparkline::default().data(&sp.values);
+            if let Some(b) = &sp.block { w = w.block(b.clone()); }
+            ratatui::widgets::Widget::render(w, area, buf);
+        }
+        x if x == FfiWidgetKind::Scrollbar as u32 => {
+            if cmd.handle.is_null() { return; }
+            let sc = unsafe { &*(cmd.handle as *const FfiScrollbar) };
+            let mut state = RtScrollbarState::new(sc.content_len as usize).position(sc.position as usize);
+            let orient = if sc.orient == FfiScrollbarOrient::Horizontal as u32 { RtScrollbarOrientation::HorizontalTop } else { RtScrollbarOrientation::VerticalRight };
+            let w = RtScrollbar::new(orient);
+            ratatui::widgets::StatefulWidget::render(w, area, buf, &mut state);
         }
         _ => {}
     }
@@ -530,6 +566,29 @@ pub extern "C" fn ratatui_terminal_draw_frame(term: *mut FfiTerminal, cmds: *con
                     let mut w = Tabs::new(titles).select(tbs.selected as usize);
                     if let Some(b) = &tbs.block { w = w.block(b.clone()); }
                     frame.render_widget(w, area);
+                }
+                x if x == FfiWidgetKind::BarChart as u32 => {
+                    if cmd.handle.is_null() { continue; }
+                    let bc = unsafe { &*(cmd.handle as *const FfiBarChart) };
+                    let data: Vec<(&str, u64)> = bc.labels.iter().map(|s| s.as_str()).zip(bc.values.iter().cloned()).collect();
+                    let mut w = RtBarChart::default().data(&data);
+                    if let Some(b) = &bc.block { w = w.block(b.clone()); }
+                    frame.render_widget(w, area);
+                }
+                x if x == FfiWidgetKind::Sparkline as u32 => {
+                    if cmd.handle.is_null() { continue; }
+                    let sp = unsafe { &*(cmd.handle as *const FfiSparkline) };
+                    let mut w = RtSparkline::default().data(&sp.values);
+                    if let Some(b) = &sp.block { w = w.block(b.clone()); }
+                    frame.render_widget(w, area);
+                }
+                x if x == FfiWidgetKind::Scrollbar as u32 => {
+                    if cmd.handle.is_null() { continue; }
+                    let sc = unsafe { &*(cmd.handle as *const FfiScrollbar) };
+                    let mut state = RtScrollbarState::new(sc.content_len as usize).position(sc.position as usize);
+                    let orient = if sc.orient == FfiScrollbarOrient::Horizontal as u32 { RtScrollbarOrientation::HorizontalTop } else { RtScrollbarOrientation::VerticalRight };
+                    let w = RtScrollbar::new(orient);
+                    frame.render_stateful_widget(w, area, &mut state);
                 }
                 _ => {}
             }
@@ -788,6 +847,170 @@ pub extern "C" fn ratatui_headless_render_tabs(width: u16, height: u16, t: *cons
     let mut widget = Tabs::new(titles).select(tabs.selected as usize);
     if let Some(b) = &tabs.block { widget = widget.block(b.clone()); }
     ratatui::widgets::Widget::render(widget, area, &mut buf);
+    let mut s = String::new();
+    for y in 0..height { for x in 0..width { let cell = &buf[(x, y)]; s.push_str(cell.symbol()); } if y + 1 < height { s.push('\n'); } }
+    match CString::new(s) { Ok(cstr) => { unsafe { *out_text_utf8 = cstr.into_raw(); } true }, Err(_) => false }
+}
+
+// ----- BarChart -----
+
+#[no_mangle]
+pub extern "C" fn ratatui_barchart_new() -> *mut FfiBarChart { Box::into_raw(Box::new(FfiBarChart { values: Vec::new(), labels: Vec::new(), block: None })) }
+
+#[no_mangle]
+pub extern "C" fn ratatui_barchart_free(b: *mut FfiBarChart) { if b.is_null() { return; } unsafe { drop(Box::from_raw(b)); } }
+
+#[no_mangle]
+pub extern "C" fn ratatui_barchart_set_values(b: *mut FfiBarChart, values: *const u64, len: usize) {
+    if b.is_null() || values.is_null() { return; }
+    let bc = unsafe { &mut *b };
+    let slice = unsafe { std::slice::from_raw_parts(values, len) };
+    bc.values = slice.to_vec();
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_barchart_set_labels(b: *mut FfiBarChart, tsv_utf8: *const c_char) {
+    if b.is_null() || tsv_utf8.is_null() { return; }
+    let bc = unsafe { &mut *b };
+    let c_str = unsafe { CStr::from_ptr(tsv_utf8) };
+    if let Ok(s) = c_str.to_str() { bc.labels = s.split('\t').map(|x| x.to_string()).collect(); }
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_barchart_set_block_title(b: *mut FfiBarChart, title_utf8: *const c_char, show_border: bool) {
+    if b.is_null() { return; }
+    let bc = unsafe { &mut *b };
+    let mut block = if show_border { Block::default().borders(Borders::ALL) } else { Block::default() };
+    if !title_utf8.is_null() { if let Ok(title) = unsafe { CStr::from_ptr(title_utf8) }.to_str() { block = block.title(title.to_string()); }}
+    bc.block = Some(block);
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_terminal_draw_barchart_in(term: *mut FfiTerminal, b: *const FfiBarChart, rect: FfiRect) -> bool {
+    if term.is_null() || b.is_null() { return false; }
+    let t = unsafe { &mut *term };
+    let bc = unsafe { &*b };
+    let area = Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    let data: Vec<(&str, u64)> = bc.labels.iter().map(|s| s.as_str()).zip(bc.values.iter().cloned()).collect();
+    let mut w = RtBarChart::default().data(&data);
+    if let Some(bl) = &bc.block { w = w.block(bl.clone()); }
+    let res = t.terminal.draw(|frame| { frame.render_widget(w.clone(), area); });
+    res.is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_headless_render_barchart(width: u16, height: u16, b: *const FfiBarChart, out_text_utf8: *mut *mut c_char) -> bool {
+    if b.is_null() || out_text_utf8.is_null() { return false; }
+    let bc = unsafe { &*b };
+    let area = Rect { x: 0, y: 0, width, height };
+    let mut buf = Buffer::empty(area);
+    let data: Vec<(&str, u64)> = bc.labels.iter().map(|s| s.as_str()).zip(bc.values.iter().cloned()).collect();
+    let mut w = RtBarChart::default().data(&data);
+    if let Some(bl) = &bc.block { w = w.block(bl.clone()); }
+    ratatui::widgets::Widget::render(w, area, &mut buf);
+    let mut s = String::new();
+    for y in 0..height { for x in 0..width { let cell = &buf[(x, y)]; s.push_str(cell.symbol()); } if y + 1 < height { s.push('\n'); } }
+    match CString::new(s) { Ok(cstr) => { unsafe { *out_text_utf8 = cstr.into_raw(); } true }, Err(_) => false }
+}
+
+// ----- Sparkline -----
+
+#[no_mangle]
+pub extern "C" fn ratatui_sparkline_new() -> *mut FfiSparkline { Box::into_raw(Box::new(FfiSparkline { values: Vec::new(), block: None })) }
+
+#[no_mangle]
+pub extern "C" fn ratatui_sparkline_free(s: *mut FfiSparkline) { if s.is_null() { return; } unsafe { drop(Box::from_raw(s)); } }
+
+#[no_mangle]
+pub extern "C" fn ratatui_sparkline_set_values(s: *mut FfiSparkline, values: *const u64, len: usize) {
+    if s.is_null() || values.is_null() { return; }
+    let sp = unsafe { &mut *s };
+    let slice = unsafe { std::slice::from_raw_parts(values, len) };
+    sp.values = slice.to_vec();
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_sparkline_set_block_title(s: *mut FfiSparkline, title_utf8: *const c_char, show_border: bool) {
+    if s.is_null() { return; }
+    let sp = unsafe { &mut *s };
+    let mut block = if show_border { Block::default().borders(Borders::ALL) } else { Block::default() };
+    if !title_utf8.is_null() { if let Ok(title) = unsafe { CStr::from_ptr(title_utf8) }.to_str() { block = block.title(title.to_string()); }}
+    sp.block = Some(block);
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_terminal_draw_sparkline_in(term: *mut FfiTerminal, s: *const FfiSparkline, rect: FfiRect) -> bool {
+    if term.is_null() || s.is_null() { return false; }
+    let t = unsafe { &mut *term };
+    let sp = unsafe { &*s };
+    let area = Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    let mut w = RtSparkline::default().data(&sp.values);
+    if let Some(bl) = &sp.block { w = w.block(bl.clone()); }
+    let res = t.terminal.draw(|frame| { frame.render_widget(w.clone(), area); });
+    res.is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_headless_render_sparkline(width: u16, height: u16, s: *const FfiSparkline, out_text_utf8: *mut *mut c_char) -> bool {
+    if s.is_null() || out_text_utf8.is_null() { return false; }
+    let sp = unsafe { &*s };
+    let area = Rect { x: 0, y: 0, width, height };
+    let mut buf = Buffer::empty(area);
+    let mut w = RtSparkline::default().data(&sp.values);
+    if let Some(bl) = &sp.block { w = w.block(bl.clone()); }
+    ratatui::widgets::Widget::render(w, area, &mut buf);
+    let mut s = String::new();
+    for y in 0..height { for x in 0..width { let cell = &buf[(x, y)]; s.push_str(cell.symbol()); } if y + 1 < height { s.push('\n'); } }
+    match CString::new(s) { Ok(cstr) => { unsafe { *out_text_utf8 = cstr.into_raw(); } true }, Err(_) => false }
+}
+
+// ----- Scrollbar -----
+
+#[no_mangle]
+pub extern "C" fn ratatui_scrollbar_new() -> *mut FfiScrollbar { Box::into_raw(Box::new(FfiScrollbar { orient: FfiScrollbarOrient::Vertical as u32, position: 0, content_len: 0, viewport_len: 0, block: None })) }
+
+#[no_mangle]
+pub extern "C" fn ratatui_scrollbar_free(s: *mut FfiScrollbar) { if s.is_null() { return; } unsafe { drop(Box::from_raw(s)); } }
+
+#[no_mangle]
+pub extern "C" fn ratatui_scrollbar_configure(s: *mut FfiScrollbar, orient: u32, position: u16, content_len: u16, viewport_len: u16) {
+    if s.is_null() { return; }
+    let sb = unsafe { &mut *s };
+    sb.orient = orient; sb.position = position; sb.content_len = content_len; sb.viewport_len = viewport_len;
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_scrollbar_set_block_title(s: *mut FfiScrollbar, title_utf8: *const c_char, show_border: bool) {
+    if s.is_null() { return; }
+    let sb = unsafe { &mut *s };
+    let mut block = if show_border { Block::default().borders(Borders::ALL) } else { Block::default() };
+    if !title_utf8.is_null() { if let Ok(title) = unsafe { CStr::from_ptr(title_utf8) }.to_str() { block = block.title(title.to_string()); }}
+    sb.block = Some(block);
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_terminal_draw_scrollbar_in(term: *mut FfiTerminal, s: *const FfiScrollbar, rect: FfiRect) -> bool {
+    if term.is_null() || s.is_null() { return false; }
+    let t = unsafe { &mut *term };
+    let sb = unsafe { &*s };
+    let area = Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    let orient = if sb.orient == FfiScrollbarOrient::Horizontal as u32 { RtScrollbarOrientation::HorizontalTop } else { RtScrollbarOrientation::VerticalRight };
+    let mut state = RtScrollbarState::new(sb.content_len as usize).position(sb.position as usize).viewport_content_length(sb.viewport_len as usize);
+    let mut w = RtScrollbar::new(orient);
+    let res = t.terminal.draw(|frame| { frame.render_stateful_widget(w.clone(), area, &mut state); });
+    res.is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_headless_render_scrollbar(width: u16, height: u16, s: *const FfiScrollbar, out_text_utf8: *mut *mut c_char) -> bool {
+    if s.is_null() || out_text_utf8.is_null() { return false; }
+    let sb = unsafe { &*s };
+    let area = Rect { x: 0, y: 0, width, height };
+    let mut buf = Buffer::empty(area);
+    let orient = if sb.orient == FfiScrollbarOrient::Horizontal as u32 { RtScrollbarOrientation::HorizontalTop } else { RtScrollbarOrientation::VerticalRight };
+    let mut state = RtScrollbarState::new(sb.content_len as usize).position(sb.position as usize).viewport_content_length(sb.viewport_len as usize);
+    let mut w = RtScrollbar::new(orient);
+    ratatui::widgets::StatefulWidget::render(w, area, &mut buf, &mut state);
     let mut s = String::new();
     for y in 0..height { for x in 0..width { let cell = &buf[(x, y)]; s.push_str(cell.symbol()); } if y + 1 < height { s.push('\n'); } }
     match CString::new(s) { Ok(cstr) => { unsafe { *out_text_utf8 = cstr.into_raw(); } true }, Err(_) => false }

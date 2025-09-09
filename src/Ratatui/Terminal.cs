@@ -106,6 +106,42 @@ public sealed class Terminal : IDisposable
     public void Draw(Tabs tabs, Vec2i pos, Vec2i size)
         => Draw(tabs, Rect.From(pos, size));
 
+    public void Draw(BarChart chart, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (chart is null) throw new ArgumentNullException(nameof(chart));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawBarChartIn(_handle.DangerousGetHandle(), chart.DangerousHandle, r);
+        if (!ok) throw new InvalidOperationException("DrawBarChart failed");
+    }
+
+    public void Draw(BarChart chart, Vec2i pos, Vec2i size)
+        => Draw(chart, Rect.From(pos, size));
+
+    public void Draw(Sparkline spark, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (spark is null) throw new ArgumentNullException(nameof(spark));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawSparklineIn(_handle.DangerousGetHandle(), spark.DangerousHandle, r);
+        if (!ok) throw new InvalidOperationException("DrawSparkline failed");
+    }
+
+    public void Draw(Sparkline spark, Vec2i pos, Vec2i size)
+        => Draw(spark, Rect.From(pos, size));
+
+    public void Draw(Scrollbar sb, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (sb is null) throw new ArgumentNullException(nameof(sb));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawScrollbarIn(_handle.DangerousGetHandle(), sb.DangerousHandle, r);
+        if (!ok) throw new InvalidOperationException("DrawScrollbar failed");
+    }
+
+    public void Draw(Scrollbar sb, Vec2i pos, Vec2i size)
+        => Draw(sb, Rect.From(pos, size));
+
     public bool NextEvent(TimeSpan timeout, out Event ev)
     {
         EnsureNotDisposed();

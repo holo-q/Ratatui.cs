@@ -7,5 +7,16 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>Ratatui</AssemblyName>
     <RootNamespace>Ratatui</RootNamespace>
+    <PackageId>Ratatui</PackageId>
+    <Authors>Ratatui.cs</Authors>
+    <RepositoryUrl>https://github.com/yourorg/Ratatui.cs</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/yourorg/Ratatui.cs</PackageProjectUrl>
+    <Description>C# bindings for Ratatui (Rust TUI)</Description>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" />
+  </ItemGroup>
 </Project>
