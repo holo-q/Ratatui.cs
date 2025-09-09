@@ -4,7 +4,7 @@ use std::ptr;
 
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
-use crossterm::event::{self, Event as CtEvent, KeyEvent as CtKeyEvent, KeyCode as CtKeyCode, KeyModifiers as CtKeyModifiers};
+use crossterm::event::{self, Event as CtEvent, KeyEvent as CtKeyEvent, KeyCode as CtKeyCode, KeyModifiers as CtKeyModifiers, MouseEvent as CtMouseEvent, MouseEventKind as CtMouseKind, MouseButton as CtMouseButton};
 use std::collections::VecDeque;
 use std::sync::Mutex;
 use ratatui::backend::CrosstermBackend;
@@ -12,7 +12,7 @@ use ratatui::layout::{Rect, Constraint};
 use ratatui::buffer::Buffer;
 use ratatui::prelude::*;
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Table, Row, Cell};
+use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Table, Row, Cell, Gauge, Tabs};
 
 #[repr(C)]
 pub struct FfiTerminal {
@@ -32,10 +32,16 @@ pub struct FfiList {
 }
 
 #[repr(C)]
+pub struct FfiGauge { ratio: f32, label: Option<String>, block: Option<Block<'static>> }
+
+#[repr(C)]
+pub struct FfiTabs { titles: Vec<String>, selected: u16, block: Option<Block<'static>> }
+
+#[repr(C)]
 pub struct FfiRect { pub x: u16, pub y: u16, pub width: u16, pub height: u16 }
 
 #[repr(u32)]
-pub enum FfiEventKind { None = 0, Key = 1, Resize = 2 }
+pub enum FfiEventKind { None = 0, Key = 1, Resize = 2, Mouse = 3 }
 
 #[repr(u32)]
 pub enum FfiKeyCode {
@@ -82,7 +88,13 @@ bitflags::bitflags! {
 pub struct FfiKeyEvent { pub code: u32, pub ch: u32, pub mods: u8 }
 
 #[repr(C)]
-pub struct FfiEvent { pub kind: u32, pub key: FfiKeyEvent, pub width: u16, pub height: u16 }
+pub struct FfiEvent { pub kind: u32, pub key: FfiKeyEvent, pub width: u16, pub height: u16, pub mouse_x: u16, pub mouse_y: u16, pub mouse_kind: u32, pub mouse_btn: u32, pub mouse_mods: u8 }
+
+#[repr(u32)]
+pub enum FfiMouseKind { Down = 1, Up = 2, Drag = 3, Moved = 4, ScrollUp = 5, ScrollDown = 6 }
+
+#[repr(u32)]
+pub enum FfiMouseButton { Left = 1, Right = 2, Middle = 3, None = 0 }
 
 #[no_mangle]
 pub extern "C" fn ratatui_init_terminal() -> *mut FfiTerminal {
@@ -372,7 +384,8 @@ pub extern "C" fn ratatui_headless_render_table(
 }
 
 #[repr(u32)]
-pub enum FfiWidgetKind { Paragraph = 1, List = 2, Table = 3 }
+pub enum FfiWidgetKind { Paragraph = 1, List = 2, Table = 3, Gauge = 4, Tabs = 5 }
+// extend kinds for new widgets
 
 #[repr(C)]
 pub struct FfiDrawCmd { pub kind: u32, pub handle: *const (), pub rect: FfiRect }
@@ -405,6 +418,22 @@ fn render_cmd_to_buffer(cmd: &FfiDrawCmd, buf: &mut Buffer) {
             let mut w = Table::new(rows, widths);
             if let Some(hr) = header_row { w = w.header(hr); }
             if let Some(b) = &tb.block { w = w.block(b.clone()); }
+            ratatui::widgets::Widget::render(w, area, buf);
+        }
+        x if x == FfiWidgetKind::Gauge as u32 => {
+            if cmd.handle.is_null() { return; }
+            let g = unsafe { &*(cmd.handle as *const FfiGauge) };
+            let mut w = Gauge::default().ratio(g.ratio as f64);
+            if let Some(label) = &g.label { w = w.label(label.clone()); }
+            if let Some(b) = &g.block { w = w.block(b.clone()); }
+            ratatui::widgets::Widget::render(w, area, buf);
+        }
+        x if x == FfiWidgetKind::Tabs as u32 => {
+            if cmd.handle.is_null() { return; }
+            let t = unsafe { &*(cmd.handle as *const FfiTabs) };
+            let titles: Vec<Line> = t.titles.iter().cloned().map(|s| Line::from(Span::raw(s))).collect();
+            let mut w = Tabs::new(titles).select(t.selected as usize);
+            if let Some(b) = &t.block { w = w.block(b.clone()); }
             ratatui::widgets::Widget::render(w, area, buf);
         }
         _ => {}
@@ -467,6 +496,22 @@ pub extern "C" fn ratatui_terminal_draw_frame(term: *mut FfiTerminal, cmds: *con
                     if let Some(b) = &tb.block { w = w.block(b.clone()); }
                     frame.render_widget(w, area);
                 }
+                x if x == FfiWidgetKind::Gauge as u32 => {
+                    if cmd.handle.is_null() { continue; }
+                    let g = unsafe { &*(cmd.handle as *const FfiGauge) };
+                    let mut w = Gauge::default().ratio(g.ratio as f64);
+                    if let Some(label) = &g.label { w = w.label(label.clone()); }
+                    if let Some(b) = &g.block { w = w.block(b.clone()); }
+                    frame.render_widget(w, area);
+                }
+                x if x == FfiWidgetKind::Tabs as u32 => {
+                    if cmd.handle.is_null() { continue; }
+                    let tbs = unsafe { &*(cmd.handle as *const FfiTabs) };
+                    let titles: Vec<Line> = tbs.titles.iter().cloned().map(|s| Line::from(Span::raw(s))).collect();
+                    let mut w = Tabs::new(titles).select(tbs.selected as usize);
+                    if let Some(b) = &tbs.block { w = w.block(b.clone()); }
+                    frame.render_widget(w, area);
+                }
                 _ => {}
             }
         }
@@ -511,6 +556,25 @@ pub extern "C" fn ratatui_inject_key(code: u32, ch: u32, mods: u8) {
 #[no_mangle]
 pub extern "C" fn ratatui_inject_resize(width: u16, height: u16) {
     INJECTED_EVENTS.lock().unwrap().push_back(CtEvent::Resize(width, height));
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_inject_mouse(kind: u32, btn: u32, x: u16, y: u16, mods: u8) {
+    let kind = match kind {
+        x if x == FfiMouseKind::Down as u32 => CtMouseKind::Down(match btn { 1 => CtMouseButton::Left, 2 => CtMouseButton::Right, 3 => CtMouseButton::Middle, _ => CtMouseButton::Left }),
+        x if x == FfiMouseKind::Up as u32 => CtMouseKind::Up(match btn { 1 => CtMouseButton::Left, 2 => CtMouseButton::Right, 3 => CtMouseButton::Middle, _ => CtMouseButton::Left }),
+        x if x == FfiMouseKind::Drag as u32 => CtMouseKind::Drag(match btn { 1 => CtMouseButton::Left, 2 => CtMouseButton::Right, 3 => CtMouseButton::Middle, _ => CtMouseButton::Left }),
+        x if x == FfiMouseKind::Moved as u32 => CtMouseKind::Moved,
+        x if x == FfiMouseKind::ScrollUp as u32 => CtMouseKind::ScrollUp,
+        x if x == FfiMouseKind::ScrollDown as u32 => CtMouseKind::ScrollDown,
+        _ => CtMouseKind::Moved,
+    };
+    let modifiers = CtKeyModifiers::from_bits_truncate(
+        (if (mods & FfiKeyMods::SHIFT.bits()) != 0 { CtKeyModifiers::SHIFT.bits() } else { 0 }) |
+        (if (mods & FfiKeyMods::ALT.bits()) != 0 { CtKeyModifiers::ALT.bits() } else { 0 }) |
+        (if (mods & FfiKeyMods::CTRL.bits()) != 0 { CtKeyModifiers::CONTROL.bits() } else { 0 })
+    );
+    INJECTED_EVENTS.lock().unwrap().push_back(CtEvent::Mouse(CtMouseEvent{ kind, column: x, row: y, modifiers }));
 }
 
 // ----- Simple List -----
@@ -562,6 +626,123 @@ pub extern "C" fn ratatui_terminal_draw_list_in(term: *mut FfiTerminal, lst: *co
         frame.render_widget(widget.clone(), area);
     });
     res.is_ok()
+}
+
+// ----- Gauge -----
+
+#[no_mangle]
+pub extern "C" fn ratatui_gauge_new() -> *mut FfiGauge { Box::into_raw(Box::new(FfiGauge { ratio: 0.0, label: None, block: None })) }
+
+#[no_mangle]
+pub extern "C" fn ratatui_gauge_free(g: *mut FfiGauge) { if g.is_null() { return; } unsafe { drop(Box::from_raw(g)); } }
+
+#[no_mangle]
+pub extern "C" fn ratatui_gauge_set_ratio(g: *mut FfiGauge, ratio: f32) { if g.is_null() { return; } unsafe { (&mut *g).ratio = ratio.clamp(0.0, 1.0); } }
+
+#[no_mangle]
+pub extern "C" fn ratatui_gauge_set_label(g: *mut FfiGauge, label: *const c_char) {
+    if g.is_null() { return; }
+    let gg = unsafe { &mut *g };
+    gg.label = if label.is_null() { None } else { unsafe { CStr::from_ptr(label) }.to_str().ok().map(|s| s.to_string()) };
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_gauge_set_block_title(g: *mut FfiGauge, title_utf8: *const c_char, show_border: bool) {
+    if g.is_null() { return; }
+    let gg = unsafe { &mut *g };
+    let mut block = if show_border { Block::default().borders(Borders::ALL) } else { Block::default() };
+    if !title_utf8.is_null() {
+        let c_str = unsafe { CStr::from_ptr(title_utf8) };
+        if let Ok(title) = c_str.to_str() { block = block.title(title.to_string()); }
+    }
+    gg.block = Some(block);
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_terminal_draw_gauge_in(term: *mut FfiTerminal, g: *const FfiGauge, rect: FfiRect) -> bool {
+    if term.is_null() || g.is_null() { return false; }
+    let t = unsafe { &mut *term };
+    let gg = unsafe { &*g };
+    let area = Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    let mut widget = Gauge::default().ratio(gg.ratio as f64);
+    if let Some(label) = &gg.label { widget = widget.label(label.clone()); }
+    if let Some(b) = &gg.block { widget = widget.block(b.clone()); }
+    let res = t.terminal.draw(|frame| { frame.render_widget(widget.clone(), area); });
+    res.is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_headless_render_gauge(width: u16, height: u16, g: *const FfiGauge, out_text_utf8: *mut *mut c_char) -> bool {
+    if g.is_null() || out_text_utf8.is_null() { return false; }
+    let gg = unsafe { &*g };
+    let area = Rect { x: 0, y: 0, width, height };
+    let mut buf = Buffer::empty(area);
+    let mut w = Gauge::default().ratio(gg.ratio as f64);
+    if let Some(label) = &gg.label { w = w.label(label.clone()); }
+    if let Some(b) = &gg.block { w = w.block(b.clone()); }
+    ratatui::widgets::Widget::render(w, area, &mut buf);
+    let mut s = String::new();
+    for y in 0..height { for x in 0..width { let cell = &buf[(x, y)]; s.push_str(cell.symbol()); } if y + 1 < height { s.push('\n'); } }
+    match CString::new(s) { Ok(cstr) => { unsafe { *out_text_utf8 = cstr.into_raw(); } true }, Err(_) => false }
+}
+
+// ----- Tabs -----
+
+#[no_mangle]
+pub extern "C" fn ratatui_tabs_new() -> *mut FfiTabs { Box::into_raw(Box::new(FfiTabs { titles: Vec::new(), selected: 0, block: None })) }
+
+#[no_mangle]
+pub extern "C" fn ratatui_tabs_free(t: *mut FfiTabs) { if t.is_null() { return; } unsafe { drop(Box::from_raw(t)); } }
+
+#[no_mangle]
+pub extern "C" fn ratatui_tabs_set_titles(t: *mut FfiTabs, tsv_utf8: *const c_char) {
+    if t.is_null() || tsv_utf8.is_null() { return; }
+    let tt = unsafe { &mut *t };
+    let c_str = unsafe { CStr::from_ptr(tsv_utf8) };
+    if let Ok(s) = c_str.to_str() { tt.titles = s.split('\t').map(|x| x.to_string()).collect(); }
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_tabs_set_selected(t: *mut FfiTabs, selected: u16) { if t.is_null() { return; } unsafe { (&mut *t).selected = selected; } }
+
+#[no_mangle]
+pub extern "C" fn ratatui_tabs_set_block_title(t: *mut FfiTabs, title_utf8: *const c_char, show_border: bool) {
+    if t.is_null() { return; }
+    let tt = unsafe { &mut *t };
+    let mut block = if show_border { Block::default().borders(Borders::ALL) } else { Block::default() };
+    if !title_utf8.is_null() {
+        let c_str = unsafe { CStr::from_ptr(title_utf8) };
+        if let Ok(title) = c_str.to_str() { block = block.title(title.to_string()); }
+    }
+    tt.block = Some(block);
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_terminal_draw_tabs_in(term: *mut FfiTerminal, t: *const FfiTabs, rect: FfiRect) -> bool {
+    if term.is_null() || t.is_null() { return false; }
+    let termi = unsafe { &mut *term };
+    let tabs = unsafe { &*t };
+    let area = Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    let titles: Vec<Line> = tabs.titles.iter().cloned().map(|s| Line::from(Span::raw(s))).collect();
+    let mut widget = Tabs::new(titles).select(tabs.selected as usize);
+    if let Some(b) = &tabs.block { widget = widget.block(b.clone()); }
+    let res = termi.terminal.draw(|frame| { frame.render_widget(widget.clone(), area); });
+    res.is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn ratatui_headless_render_tabs(width: u16, height: u16, t: *const FfiTabs, out_text_utf8: *mut *mut c_char) -> bool {
+    if t.is_null() || out_text_utf8.is_null() { return false; }
+    let tabs = unsafe { &*t };
+    let area = Rect { x: 0, y: 0, width, height };
+    let mut buf = Buffer::empty(area);
+    let titles: Vec<Line> = tabs.titles.iter().cloned().map(|s| Line::from(Span::raw(s))).collect();
+    let mut widget = Tabs::new(titles).select(tabs.selected as usize);
+    if let Some(b) = &tabs.block { widget = widget.block(b.clone()); }
+    ratatui::widgets::Widget::render(widget, area, &mut buf);
+    let mut s = String::new();
+    for y in 0..height { for x in 0..width { let cell = &buf[(x, y)]; s.push_str(cell.symbol()); } if y + 1 < height { s.push('\n'); } }
+    match CString::new(s) { Ok(cstr) => { unsafe { *out_text_utf8 = cstr.into_raw(); } true }, Err(_) => false }
 }
 
 // ----- Simple Table (tab-separated cells) -----
@@ -700,12 +881,39 @@ fn ffi_key_from(k: CtKeyEvent) -> FfiKeyEvent {
 }
 
 fn fill_ffi_event(evt: CtEvent, out_event: *mut FfiEvent) -> bool {
-    let mut out = FfiEvent { kind: FfiEventKind::None as u32, key: FfiKeyEvent { code: 0, ch: 0, mods: 0 }, width: 0, height: 0 };
+    let mut out = FfiEvent { kind: FfiEventKind::None as u32, key: FfiKeyEvent { code: 0, ch: 0, mods: 0 }, width: 0, height: 0, mouse_x: 0, mouse_y: 0, mouse_kind: 0, mouse_btn: 0, mouse_mods: 0 };
     match evt {
         CtEvent::Key(k) => { out.kind = FfiEventKind::Key as u32; out.key = ffi_key_from(k); },
         CtEvent::Resize(w,h) => { out.kind = FfiEventKind::Resize as u32; out.width = w; out.height = h; },
+        CtEvent::Mouse(m) => {
+            out.kind = FfiEventKind::Mouse as u32;
+            match m.kind {
+                CtMouseKind::Down(btn) => { out.mouse_kind = FfiMouseKind::Down as u32; out.mouse_btn = ffi_mouse_btn(btn); }
+                CtMouseKind::Up(btn) => { out.mouse_kind = FfiMouseKind::Up as u32; out.mouse_btn = ffi_mouse_btn(btn); }
+                CtMouseKind::Drag(btn) => { out.mouse_kind = FfiMouseKind::Drag as u32; out.mouse_btn = ffi_mouse_btn(btn); }
+                CtMouseKind::Moved => { out.mouse_kind = FfiMouseKind::Moved as u32; }
+                CtMouseKind::ScrollUp => { out.mouse_kind = FfiMouseKind::ScrollUp as u32; }
+                CtMouseKind::ScrollDown => { out.mouse_kind = FfiMouseKind::ScrollDown as u32; }
+                _ => {}
+            }
+            out.mouse_x = m.column;
+            out.mouse_y = m.row;
+            out.mouse_mods = ffi_mods_to_u8(m.modifiers);
+        }
         _ => {}
     }
     unsafe { *out_event = out; }
     true
+}
+
+fn ffi_mouse_btn(b: CtMouseButton) -> u32 {
+    match b { CtMouseButton::Left => FfiMouseButton::Left as u32, CtMouseButton::Right => FfiMouseButton::Right as u32, CtMouseButton::Middle => FfiMouseButton::Middle as u32 }
+}
+
+fn ffi_mods_to_u8(m: CtKeyModifiers) -> u8 {
+    let mut out = 0u8;
+    if m.contains(CtKeyModifiers::SHIFT) { out |= FfiKeyMods::SHIFT.bits(); }
+    if m.contains(CtKeyModifiers::ALT) { out |= FfiKeyMods::ALT.bits(); }
+    if m.contains(CtKeyModifiers::CONTROL) { out |= FfiKeyMods::CTRL.bits(); }
+    out
 }

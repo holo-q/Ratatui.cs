@@ -66,7 +66,7 @@ internal static class Native
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return Environment.Is64BitProcess ? "win-x64" : "win-x86";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            return "osx-x64"; // simplistic; extend for arm64 if needed
+            return RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "osx-arm64" : "osx-x64";
         return "linux-x64";
     }
 
@@ -103,13 +103,13 @@ internal static class Native
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalSize(out ushort width, out ushort height);
 
-    internal enum FfiEventKind : uint { None = 0, Key = 1, Resize = 2 }
+    internal enum FfiEventKind : uint { None = 0, Key = 1, Resize = 2, Mouse = 3 }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct FfiKeyEvent { public uint Code; public uint Ch; public byte Mods; }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct FfiEvent { public uint Kind; public FfiKeyEvent Key; public ushort Width; public ushort Height; }
+    internal struct FfiEvent { public uint Kind; public FfiKeyEvent Key; public ushort Width; public ushort Height; public ushort MouseX; public ushort MouseY; public uint MouseKind; public uint MouseBtn; public byte MouseMods; }
 
     [DllImport(LibraryName, EntryPoint = "ratatui_next_event", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -180,7 +180,7 @@ internal static class Native
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiHeadlessRenderTable(ushort width, ushort height, IntPtr table, out IntPtr utf8Text);
 
-    internal enum FfiWidgetKind : uint { Paragraph = 1, List = 2, Table = 3 }
+    internal enum FfiWidgetKind : uint { Paragraph = 1, List = 2, Table = 3, Gauge = 4, Tabs = 5 }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct FfiDrawCmd { public uint Kind; public IntPtr Handle; public FfiRect Rect; }
@@ -199,4 +199,46 @@ internal static class Native
 
     [DllImport(LibraryName, EntryPoint = "ratatui_inject_resize", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiInjectResize(ushort width, ushort height);
+
+    internal enum FfiMouseKind : uint { Down = 1, Up = 2, Drag = 3, Moved = 4, ScrollUp = 5, ScrollDown = 6 }
+    internal enum FfiMouseButton : uint { None = 0, Left = 1, Right = 2, Middle = 3 }
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_inject_mouse", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiInjectMouse(uint kind, uint btn, ushort x, ushort y, byte mods);
+
+    // Gauge
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern IntPtr RatatuiGaugeNew();
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_free", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeFree(IntPtr g);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_ratio", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetRatio(IntPtr g, float ratio);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_label", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetLabel(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? label);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetBlockTitle(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_gauge_in", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiTerminalDrawGaugeIn(IntPtr term, IntPtr g, FfiRect rect);
+    [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_gauge", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiHeadlessRenderGauge(ushort width, ushort height, IntPtr g, out IntPtr utf8Text);
+
+    // Tabs
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern IntPtr RatatuiTabsNew();
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_free", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTabsFree(IntPtr t);
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_titles", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTabsSetTitles(IntPtr t, [MarshalAs(UnmanagedType.LPUTF8Str)] string tsv);
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_selected", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTabsSetSelected(IntPtr t, ushort selected);
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_block_title", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTabsSetBlockTitle(IntPtr t, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_tabs_in", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiTerminalDrawTabsIn(IntPtr term, IntPtr t, FfiRect rect);
+    [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_tabs", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool RatatuiHeadlessRenderTabs(ushort width, ushort height, IntPtr t, out IntPtr utf8Text);
 }

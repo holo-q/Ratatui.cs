@@ -80,6 +80,30 @@ public sealed class Terminal : IDisposable
     public void Draw(Table table, Vec2i pos, Vec2i size)
         => Draw(table, Rect.From(pos, size));
 
+    public void Draw(Gauge gauge, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (gauge is null) throw new ArgumentNullException(nameof(gauge));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawGaugeIn(_handle.DangerousGetHandle(), gauge.DangerousHandle, r);
+        if (!ok) throw new InvalidOperationException("DrawGauge failed");
+    }
+
+    public void Draw(Gauge gauge, Vec2i pos, Vec2i size)
+        => Draw(gauge, Rect.From(pos, size));
+
+    public void Draw(Tabs tabs, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (tabs is null) throw new ArgumentNullException(nameof(tabs));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawTabsIn(_handle.DangerousGetHandle(), tabs.DangerousHandle, r);
+        if (!ok) throw new InvalidOperationException("DrawTabs failed");
+    }
+
+    public void Draw(Tabs tabs, Vec2i pos, Vec2i size)
+        => Draw(tabs, Rect.From(pos, size));
+
     public bool NextEvent(TimeSpan timeout, out Event ev)
     {
         EnsureNotDisposed();

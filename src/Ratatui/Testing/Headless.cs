@@ -46,4 +46,22 @@ public static class Headless
         try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
         finally { Interop.Native.RatatuiStringFree(ptr); }
     }
+
+    public static string RenderGauge(int width, int height, Gauge g)
+    {
+        if (g is null) throw new ArgumentNullException(nameof(g));
+        var ok = Interop.Native.RatatuiHeadlessRenderGauge((ushort)width, (ushort)height, g.DangerousHandle, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless gauge render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
+
+    public static string RenderTabs(int width, int height, Tabs t)
+    {
+        if (t is null) throw new ArgumentNullException(nameof(t));
+        var ok = Interop.Native.RatatuiHeadlessRenderTabs((ushort)width, (ushort)height, t.DangerousHandle, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless tabs render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
 }

@@ -23,7 +23,7 @@ public readonly record struct Rect(int X, int Y, int Width, int Height)
     public bool Contains(Vec2i p) => p.X >= X && p.Y >= Y && p.X < X + Width && p.Y < Y + Height;
 }
 
-public enum EventKind { None = 0, Key = 1, Resize = 2 }
+public enum EventKind { None = 0, Key = 1, Resize = 2, Mouse = 3 }
 
 public readonly struct KeyEvent(uint code, uint ch, byte mods)
 {
@@ -40,6 +40,7 @@ public readonly struct Event
     public KeyEvent Key { get; init; }
     public int Width { get; init; }
     public int Height { get; init; }
+    public MouseEvent Mouse { get; init; }
 
     internal static Event FromFfi(Interop.Native.FfiEvent fe)
     {
@@ -49,6 +50,38 @@ public readonly struct Event
             Key = new KeyEvent(fe.Key.Code, fe.Key.Ch, fe.Key.Mods),
             Width = fe.Width,
             Height = fe.Height,
+            Mouse = MouseEvent.FromFfi(fe),
         };
+    }
+}
+
+public enum MouseKind { Down = 1, Up = 2, Drag = 3, Moved = 4, ScrollUp = 5, ScrollDown = 6 }
+public enum MouseButton { None = 0, Left = 1, Right = 2, Middle = 3 }
+
+public readonly struct MouseEvent
+{
+    public MouseKind Kind { get; }
+    public MouseButton Button { get; }
+    public int X { get; }
+    public int Y { get; }
+    public bool Shift { get; }
+    public bool Alt { get; }
+    public bool Ctrl { get; }
+
+    private MouseEvent(MouseKind kind, MouseButton button, int x, int y, bool shift, bool alt, bool ctrl)
+    { Kind = kind; Button = button; X = x; Y = y; Shift = shift; Alt = alt; Ctrl = ctrl; }
+
+    internal static MouseEvent FromFfi(Interop.Native.FfiEvent fe)
+    {
+        var mods = fe.MouseMods;
+        return new MouseEvent(
+            (MouseKind)fe.MouseKind,
+            (MouseButton)fe.MouseBtn,
+            fe.MouseX,
+            fe.MouseY,
+            (mods & 0x1) != 0,
+            (mods & 0x2) != 0,
+            (mods & 0x4) != 0
+        );
     }
 }
