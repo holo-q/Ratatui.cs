@@ -32,6 +32,20 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
+    public Paragraph AppendSpan(string text, Style? style = null)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiParagraphAppendSpan(_handle.DangerousGetHandle(), text, (style ?? default).ToFfi());
+        return this;
+    }
+
+    public Paragraph NewLine()
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiParagraphNewLine(_handle.DangerousGetHandle());
+        return this;
+    }
+
     public Paragraph Align(Alignment alignment)
     {
         EnsureNotDisposed();

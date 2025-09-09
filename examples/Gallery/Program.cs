@@ -1,95 +1,66 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Ratatui;
-using Ratatui.Layout;
 
 class Program
 {
-    static async Task Main()
+    static async Task<int> Main()
     {
         using var term = new Terminal();
         term.Clear();
 
-        var running = true;
-        var tick = 0;
-        var selected = 0;
-        var tabs = new Tabs().Titles("Overview", "Metrics", "Table");
-        var list = new List().Title("Items");
-        foreach (var s in Enumerable.Range(1, 20).Select(i => $"Item {i}")) list.AppendItem(s);
-        var gauge = new Gauge().Title("Load").Ratio(0.10f);
-        static ulong[] Spark(int t)
-        {
-            return Enumerable.Range(0, 40)
-                .Select(i => (int)Math.Round(((Math.Sin((i + t) / 4.0) + 1.0) / 2.0) * 100))
-                .Select(v => (ulong)Math.Clamp(v, 0, 100))
-                .ToArray();
-        }
-        var spark = new Sparkline().Values(Spark(0));
-        var table = new Table().Title("Data").Headers("A", "B");
-        for (int i = 0; i < 10; i++) table.AppendRow($"{i}", $"{i*i}");
+        using var para = new Paragraph("Ratatui.cs ")
+            .AppendSpan("KINO", new Style(fg: Color.LightMagenta, bold: true))
+            .AppendSpan(" mode", new Style(italic: true))
+            .NewLine()
+            .AppendSpan("Align & Wrap", new Style(underline: true))
+            .Align(Alignment.Center)
+            .Wrap();
+
+        using var list = new List()
+            .Title("List")
+            .AppendItem("Alpha")
+            .AppendItem("Beta")
+            .AppendItem("Gamma")
+            .Selected(1);
+
+        using var table = new Table()
+            .Title("Table")
+            .Headers("A", "B", "C")
+            .AppendRow("1","2","3")
+            .AppendRow("4","5","6")
+            .ColumnPercents(34,33,33)
+            .Selected(0)
+            .HighlightSymbol("> ");
+
+        using var chart = new Chart()
+            .Title("Chart")
+            .Axes("x","y").AxesBounds(0,2,0,3)
+            .Line("L1", new [] { (0.0,1.0), (1.0,2.5), (2.0,1.2) });
+
+        var (w,h) = term.Size();
+        var rect = new Rect(0,0,w,Math.Max(20,h));
+        var left = new Rect(rect.X, rect.Y, rect.Width/2, rect.Height/2);
+        var right = new Rect(rect.X + rect.Width/2, rect.Y, rect.Width - rect.Width/2, rect.Height/2);
+        var bottom = new Rect(rect.X, rect.Y + rect.Height/2, rect.Width, rect.Height - rect.Height/2);
+
+        term.Draw(para, left);
+        term.Draw(list, right);
+        term.Draw(table, new Rect(bottom.X, bottom.Y, bottom.Width/2, bottom.Height));
+        term.Draw(chart, new Rect(bottom.X + bottom.Width/2, bottom.Y, bottom.Width - bottom.Width/2, bottom.Height));
 
         using var cts = new CancellationTokenSource();
-        var evTask = term.RunAsync(async ev =>
+        Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+        await term.RunAsync(evt =>
         {
-            if (ev.Kind == EventKind.Key)
+            if (evt.Kind == EventKind.Key)
             {
-                if (ev.Key.Code == 27) // Esc
-                {
-                    running = false; cts.Cancel();
-                }
-                else if (ev.Key.Code == (uint)ConsoleKey.LeftArrow)
-                {
-                    selected = Math.Max(0, selected - 1);
-                }
-                else if (ev.Key.Code == (uint)ConsoleKey.RightArrow)
-                {
-                    selected = Math.Min(2, selected + 1);
-                }
+                if (evt.Key.Char == (uint)'q' || evt.Key.Char == (uint)'Q') cts.Cancel();
             }
-            await Task.CompletedTask;
-        }, TimeSpan.FromMilliseconds(16), cts.Token);
+            return Task.CompletedTask;
+        }, TimeSpan.FromMilliseconds(50), cts.Token);
 
-        while (running)
-        {
-            var (w, h) = term.Size();
-            var area = new Rect(0, 0, w, h);
-            var rows = Layout.SplitHorizontal(area, stackalloc Constraint[]
-            {
-                Constraint.Length(3),
-                Constraint.Percentage(70),
-                Constraint.Percentage(30)
-            }, gap: 1, margin: 0);
-
-            tabs.Selected(selected);
-            gauge.Ratio((float)((Math.Sin(tick/12.0) + 1.0) / 2.0));
-            spark.Values(Spark(tick));
-
-            // Upper header row
-            term.DrawFrame(
-                DrawCommand.Tabs(tabs, rows[0])
-            );
-
-            // Middle content row split 2 columns
-            var cols = Layout.SplitVertical(rows[1], stackalloc Constraint[] { Constraint.Percentage(40), Constraint.Percentage(60) }, gap: 1);
-            term.DrawFrame(
-                DrawCommand.List(list, cols[0]),
-                DrawCommand.Table(table, cols[1])
-            );
-
-            // Bottom row: gauge + sparkline
-            var bottom = Layout.SplitVertical(rows[2], stackalloc Constraint[] { Constraint.Length(rows[2].Width/3), Constraint.Percentage(100) }, gap: 1);
-            term.DrawFrame(
-                DrawCommand.Gauge(gauge, bottom[0]),
-                DrawCommand.Sparkline(spark, bottom[1])
-            );
-
-            tick++;
-            await Task.Delay(33);
-        }
-
-        cts.Cancel();
-        try { await evTask; } catch { /* ignore */ }
+        return 0;
     }
 }

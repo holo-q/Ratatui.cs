@@ -186,6 +186,12 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_append_line", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphAppendLine(IntPtr para, [MarshalAs(UnmanagedType.LPUTF8Str)] string text, FfiStyle style);
 
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_newline", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiParagraphNewLine(IntPtr para);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_append_span", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiParagraphAppendSpan(IntPtr para, [MarshalAs(UnmanagedType.LPUTF8Str)] string text, FfiStyle style);
+
     // List
     [DllImport(LibraryName, EntryPoint = "ratatui_list_new", CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr RatatuiListNew();
