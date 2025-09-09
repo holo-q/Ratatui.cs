@@ -1,10 +1,10 @@
-Ratatui.cs
+Ratatui.cs — .NET/C# Terminal UI (TUI) powered by Rust Ratatui
 
 [![NuGet](https://img.shields.io/nuget/v/Ratatui.cs.svg)](https://www.nuget.org/packages/Ratatui.cs)
 [![CI](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml)
 [![FFI crate](https://img.shields.io/crates/v/ratatui_ffi.svg)](https://crates.io/crates/ratatui_ffi)
 
-C# bindings for Ratatui (Rust TUI). Ship-ready native library per-RID, friendly C# API, frame batching, events, and headless testing.
+High-performance, cross-platform Terminal UI for .NET and C#. Exposes the Rust Ratatui engine over FFI with a friendly, idiomatic C# API. Build rich console apps with widgets, layout, keyboard/mouse events, batched frame rendering, and headless snapshot testing.
 
 Features
 
@@ -13,11 +13,11 @@ Features
 - Events: key, mouse, resize; injection for automation/tests
 - Styles: colors + modifiers; simple layout helpers and rect math
 - Headless rendering: snapshot widgets or full frames to ASCII
-- Native loading: robust resolver + env var overrides
+- Cross-platform native loading: robust resolver + env var overrides
 
 Install
 
-- dotnet add package Ratatui.cs
+- `dotnet add package Ratatui.cs`
 
 Quickstart
 
@@ -99,4 +99,3 @@ Links
 License
 
 MIT
-

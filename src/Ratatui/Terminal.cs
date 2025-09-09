@@ -201,4 +201,16 @@ public sealed class Terminal : IDisposable
             }
         }
     }
+
+    public System.Threading.Tasks.Task RunAsync(Func<Event, System.Threading.Tasks.Task> handler, TimeSpan? pollInterval = null, System.Threading.CancellationToken cancellationToken = default)
+    {
+        if (handler is null) throw new ArgumentNullException(nameof(handler));
+        return System.Threading.Tasks.Task.Run(async () =>
+        {
+            await foreach (var ev in Events(pollInterval, cancellationToken).ConfigureAwait(false))
+            {
+                await handler(ev).ConfigureAwait(false);
+            }
+        }, cancellationToken);
+    }
 }

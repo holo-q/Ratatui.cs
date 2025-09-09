@@ -8,11 +8,13 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>Ratatui</AssemblyName>
     <RootNamespace>Ratatui</RootNamespace>
+    <Title>Ratatui.cs — .NET Terminal UI (TUI)</Title>
     <PackageId>Ratatui.cs</PackageId>
     <Authors>holo-q</Authors>
     <RepositoryUrl>https://github.com/holo-q/ratatui-cs</RepositoryUrl>
     <PackageProjectUrl>https://github.com/holo-q/ratatui-cs</PackageProjectUrl>
-    <Description>C# bindings for Ratatui (Rust TUI) with headless testing, events, and batching.</Description>
+    <Description>High-performance .NET/C# Terminal UI (TUI) library powered by Rust Ratatui via FFI. Cross-platform (Windows, Linux, macOS) with rich widgets, layout, keyboard/mouse events, batched frame rendering, and headless snapshot testing. Ships prebuilt native binaries per RID and a friendly, idiomatic C# API.</Description>
+    <PackageTags>tui;terminal;terminal-ui;console;console-ui;cli;dotnet;dotnet-core;dotnet-8;dotnet-9;csharp;ui;widgets;layout;rust;ffi;bindings;ratatui;cross-platform;windows;linux;macos;headless;testing</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
