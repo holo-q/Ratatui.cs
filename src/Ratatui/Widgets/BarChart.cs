@@ -31,6 +31,16 @@ public sealed class BarChart : IDisposable
         return this;
     }
 
+    public unsafe BarChart Labels(ReadOnlySpan<byte> labelsTsvUtf8)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = labelsTsvUtf8)
+        {
+            Interop.Native.RatatuiBarChartSetLabelsBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)labelsTsvUtf8.Length);
+        }
+        return this;
+    }
+
     public BarChart Title(string? title, bool border = true)
     {
         EnsureNotDisposed();

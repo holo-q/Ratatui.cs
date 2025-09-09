@@ -32,6 +32,7 @@ public readonly struct KeyEvent(uint code, uint ch, byte mods)
     public bool Shift => (mods & 0x1) != 0;
     public bool Alt => (mods & 0x2) != 0;
     public bool Ctrl => (mods & 0x4) != 0;
+    public KeyCode CodeEnum => (KeyCode)Code;
 }
 
 public readonly struct Event
@@ -53,6 +54,26 @@ public readonly struct Event
             Mouse = MouseEvent.FromFfi(fe),
         };
     }
+}
+
+public enum KeyCode : uint
+{
+    Char = 0,
+    Enter = 1,
+    Left = 2,
+    Right = 3,
+    Up = 4,
+    Down = 5,
+    Esc = 6,
+    Backspace = 7,
+    Tab = 8,
+    Delete = 9,
+    Home = 10,
+    End = 11,
+    PageUp = 12,
+    PageDown = 13,
+    Insert = 14,
+    F1 = 100, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
 }
 
 public enum MouseKind { Down = 1, Up = 2, Drag = 3, Moved = 4, ScrollUp = 5, ScrollDown = 6 }

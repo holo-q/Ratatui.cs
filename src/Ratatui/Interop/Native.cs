@@ -320,6 +320,8 @@ internal static class Native
     internal static extern void RatatuiGaugeSetRatio(IntPtr g, float ratio);
     [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_label", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiGaugeSetLabel(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? label);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_label_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetLabelBytes(IntPtr g, IntPtr bytes, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiGaugeSetBlockTitle(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]
@@ -360,6 +362,8 @@ internal static class Native
     internal static extern void RatatuiBarChartSetValues(IntPtr b, ulong[] values, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_labels", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiBarChartSetLabels(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string tsv);
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_labels_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartSetLabelsBytes(IntPtr b, IntPtr bytes, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiBarChartSetBlockTitle(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]

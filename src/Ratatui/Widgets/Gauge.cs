@@ -29,6 +29,16 @@ public sealed class Gauge : IDisposable
         return this;
     }
 
+    public unsafe Gauge Label(ReadOnlySpan<byte> utf8)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = utf8)
+        {
+            Interop.Native.RatatuiGaugeSetLabelBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)utf8.Length);
+        }
+        return this;
+    }
+
     public Gauge Title(string? title, bool border = true)
     {
         EnsureNotDisposed();
