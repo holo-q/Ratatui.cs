@@ -18,6 +18,16 @@ public sealed class Paragraph : IDisposable
         _handle = ParagraphHandle.FromRaw(ptr);
     }
 
+    public unsafe Paragraph(ReadOnlySpan<byte> utf8Text)
+    {
+        fixed (byte* p = utf8Text)
+        {
+            var ptr = Interop.Native.RatatuiParagraphNewBytes((IntPtr)p, (UIntPtr)utf8Text.Length);
+            if (ptr == IntPtr.Zero) throw new InvalidOperationException("Failed to create Paragraph");
+            _handle = ParagraphHandle.FromRaw(ptr);
+        }
+    }
+
     public Paragraph Title(string? title, bool border = true)
     {
         EnsureNotDisposed();
@@ -25,10 +35,30 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
+    public unsafe Paragraph Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = titleUtf8)
+        {
+            Interop.Native.RatatuiParagraphSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
+        }
+        return this;
+    }
+
     public Paragraph AppendLine(string text, Style? style = null)
     {
         EnsureNotDisposed();
         Interop.Native.RatatuiParagraphAppendLine(_handle.DangerousGetHandle(), text, (style ?? default).ToFfi());
+        return this;
+    }
+
+    public unsafe Paragraph AppendLine(ReadOnlySpan<byte> utf8, Style? style = null)
+    {
+        EnsureNotDisposed();
+        fixed (byte* p = utf8)
+        {
+            Interop.Native.RatatuiParagraphAppendLineBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)utf8.Length, (style ?? default).ToFfi());
+        }
         return this;
     }
 

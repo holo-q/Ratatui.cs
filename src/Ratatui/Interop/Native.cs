@@ -135,9 +135,13 @@ internal static class Native
 
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_new", CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr RatatuiParagraphNew([MarshalAs(UnmanagedType.LPUTF8Str)] string text);
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_new_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern IntPtr RatatuiParagraphNewBytes(IntPtr bytes, UIntPtr len);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphSetBlockTitle(IntPtr para, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiParagraphSetBlockTitleBytes(IntPtr para, IntPtr bytes, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_alignment", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphSetAlignment(IntPtr para, uint align);
@@ -185,6 +189,8 @@ internal static class Native
     // Paragraph content builders
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_append_line", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphAppendLine(IntPtr para, [MarshalAs(UnmanagedType.LPUTF8Str)] string text, FfiStyle style);
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_append_line_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiParagraphAppendLineBytes(IntPtr para, IntPtr bytes, UIntPtr len, FfiStyle style);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_newline", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphNewLine(IntPtr para);
@@ -316,6 +322,8 @@ internal static class Native
     internal static extern void RatatuiGaugeSetLabel(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? label);
     [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiGaugeSetBlockTitle(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetBlockTitleBytes(IntPtr g, IntPtr bytes, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_gauge_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawGaugeIn(IntPtr term, IntPtr g, FfiRect rect);
@@ -334,6 +342,8 @@ internal static class Native
     internal static extern void RatatuiTabsSetSelected(IntPtr t, ushort selected);
     [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTabsSetBlockTitle(IntPtr t, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTabsSetBlockTitleBytes(IntPtr t, IntPtr bytes, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_tabs_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawTabsIn(IntPtr term, IntPtr t, FfiRect rect);
@@ -352,6 +362,8 @@ internal static class Native
     internal static extern void RatatuiBarChartSetLabels(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string tsv);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiBarChartSetBlockTitle(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartSetBlockTitleBytes(IntPtr b, IntPtr bytes, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_barchart_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawBarChartIn(IntPtr term, IntPtr b, FfiRect rect);
@@ -368,6 +380,8 @@ internal static class Native
     internal static extern void RatatuiSparklineSetValues(IntPtr s, ulong[] values, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiSparklineSetBlockTitle(IntPtr s, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiSparklineSetBlockTitleBytes(IntPtr s, IntPtr bytes, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_sparkline_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawSparklineIn(IntPtr term, IntPtr s, FfiRect rect);
@@ -385,6 +399,8 @@ internal static class Native
     internal static extern void RatatuiScrollbarConfigure(IntPtr s, uint orient, ushort position, ushort contentLen, ushort viewportLen);
     [DllImport(LibraryName, EntryPoint = "ratatui_scrollbar_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiScrollbarSetBlockTitle(IntPtr s, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_scrollbar_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiScrollbarSetBlockTitleBytes(IntPtr s, IntPtr bytes, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_scrollbar_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawScrollbarIn(IntPtr term, IntPtr s, FfiRect rect);
@@ -405,6 +421,11 @@ internal static class Native
     internal static extern void RatatuiChartSetAxesBounds(IntPtr c, double xMin, double xMax, double yMin, double yMax);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiChartSetBlockTitle(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_block_title_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiChartSetBlockTitleBytes(IntPtr c, IntPtr bytes, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_titles_bytes", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTabsSetTitlesBytes(IntPtr t, IntPtr bytes, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_chart_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawChartIn(IntPtr term, IntPtr c, FfiRect rect);
