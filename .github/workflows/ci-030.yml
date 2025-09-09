@@ -34,15 +34,16 @@ jobs:
           git -C native/ratatui_ffi fetch --all
           git -C native/ratatui_ffi checkout ratatui-0.30
       - uses: dtolnay/rust-toolchain@stable
-      - name: Build native
+      - name: Build native (targeted)
+        if: ${{ matrix.target != '' }}
         working-directory: native/ratatui_ffi
         run: |
-          if [ -n "${{ matrix.target }}" ]; then
-            rustup target add ${{ matrix.target }}
-            cargo build --release --target ${{ matrix.target }}
-          else
-            cargo build --release
-          fi
+          rustup target add ${{ matrix.target }}
+          cargo build --release --target ${{ matrix.target }}
+      - name: Build native (default)
+        if: ${{ matrix.target == '' }}
+        working-directory: native/ratatui_ffi
+        run: cargo build --release
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
@@ -50,6 +51,7 @@ jobs:
           path: |
             native/ratatui_ffi/target/release/${{ matrix.libname }}
             native/ratatui_ffi/target/${{ matrix.target }}/release/${{ matrix.libname }}
+          if-no-files-found: warn
 
   pack:
     name: pack-nuget-030-alpha
