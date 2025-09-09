@@ -1,0 +1,59 @@
+name: snapshots-on-ci
+
+on:
+  workflow_run:
+    workflows: ["build-and-pack"]
+    types: ["completed"]
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-commit:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          submodules: recursive
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build native linux-x64
+        run: |
+          cd native/ratatui_ffi
+          cargo build --release
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Place native lib for sample
+        run: |
+          mkdir -p examples/Snapshots/runtimes/linux-x64/native
+          cp native/ratatui_ffi/target/release/libratatui_ffi.so examples/Snapshots/runtimes/linux-x64/native/
+      - name: Run snapshots example
+        run: |
+          dotnet run --project examples/Snapshots/Snapshots.csproj -c Release
+      - name: Install ImageMagick + fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick fonts-dejavu-core
+      - name: Convert ASCII to PNG
+        run: |
+          ./scripts/ascii2png.sh artifacts/snapshots artifacts/snapshots
+      - name: Commit PNGs to main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          # Ensure we are on main at the build's head commit
+          git checkout ${{ github.event.workflow_run.head_sha }}
+          git branch -f main ${{ github.event.workflow_run.head_sha }}
+          git checkout main
+          mkdir -p docs/assets/snapshots
+          cp -f artifacts/snapshots/*.png docs/assets/snapshots/
+          git add docs/assets/snapshots/*.png || true
+          git commit -m "docs(snapshots): update PNG snapshots for ${{ github.event.workflow_run.head_sha }} [skip ci]" || echo "No changes to commit"
+          git push origin main
+
