@@ -33,6 +33,7 @@
     <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" />
     <None Include="README.md" Pack="true" PackagePath="" />
     <None Include="ratatui-icon.png" Pack="true" PackagePath="" />
+    <None Include="ratatui-logo.svg" Pack="true" PackagePath="" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />

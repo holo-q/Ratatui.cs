@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Ratatui.cs</title>
+  <desc id="desc">Logo mark for Ratatui.cs .NET Terminal UI bindings</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="48" fill="url(#g)"/>
+  <g fill="#ffffff" transform="translate(64,64)">
+    <path d="M128 64h96c62 0 112 50 112 112s-50 112-112 112h-64v96h-64V64zm96 160c26 0 48-22 48-48s-22-48-48-48h-64v96h64z" opacity="0.95"/>
+    <rect x="240" y="288" width="96" height="48" rx="8" opacity="0.9"/>
+  </g>
+  <g transform="translate(64,416)">
+    <rect x="0" y="0" width="384" height="24" fill="#ffffff" opacity="0.12"/>
+    <text x="12" y="18" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="20" fill="#ffffff" opacity="0.9">Ratatui.cs — .NET Terminal UI</text>
+  </g>
+</svg>

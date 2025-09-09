@@ -1,3 +1,5 @@
+<img src="ratatui-logo.svg" width="120" align="right" alt="Ratatui.cs logo"/>
+
 Ratatui.cs — .NET/C# Terminal UI (TUI) powered by Rust Ratatui
 
 [![NuGet](https://img.shields.io/nuget/v/Ratatui.cs.svg)](https://www.nuget.org/packages/Ratatui.cs)
@@ -14,6 +16,13 @@ Features
 - Styles: colors + modifiers; simple layout helpers and rect math
 - Headless rendering: snapshot widgets or full frames to ASCII
 - Cross-platform native loading: robust resolver + env var overrides
+
+Why Ratatui.cs?
+
+- Rust‑powered performance with Ratatui engine and efficient FFI.
+- Headless snapshot rendering for deterministic, CI‑friendly tests.
+- Fluent, idiomatic C# API with disposable widgets and helpers.
+- Prebuilt native binaries for Windows, Linux, and macOS.
 
 Install
 
