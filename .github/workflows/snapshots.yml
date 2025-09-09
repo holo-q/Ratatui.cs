@@ -25,9 +25,17 @@ jobs:
       - name: Run snapshots
         run: |
           dotnet run --project examples/Snapshots/Snapshots.csproj -c Release
+      - name: Install ImageMagick + fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick fonts-dejavu-core
+      - name: Convert ASCII to PNG
+        run: |
+          ./scripts/ascii2png.sh artifacts/snapshots artifacts/snapshots
       - name: Upload snapshots
         uses: actions/upload-artifact@v4
         with:
           name: snapshots
-          path: artifacts/snapshots/*.txt
-
+          path: |
+            artifacts/snapshots/*.txt
+            artifacts/snapshots/*.png
