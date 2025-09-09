@@ -83,7 +83,10 @@ Native loading
 
 Supported RIDs
 
-- linux-x64, win-x64, osx-x64, osx-arm64
+- linux-x64, linux-arm64
+- linux-musl-x64 (Alpine-compatible), linux-musl-arm64 (best-effort)
+- win-x64, win-arm64
+- osx-x64, osx-arm64
 
 Troubleshooting
 

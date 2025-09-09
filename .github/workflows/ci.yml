@@ -22,6 +22,7 @@ jobs:
           - os: ubuntu-latest
             rid: linux-x64
             libname: libratatui_ffi.so
+            target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             rid: linux-arm64
             libname: libratatui_ffi.so
@@ -30,6 +31,7 @@ jobs:
             rid: linux-musl-x64
             libname: libratatui_ffi.so
             target: x86_64-unknown-linux-musl
+            zigbuild: true
           - os: windows-latest
             rid: win-x64
             libname: ratatui_ffi.dll
@@ -52,8 +54,15 @@ jobs:
         if: ${{ runner.os == 'Linux' && matrix.target != '' }}
         run: |
           rustup target add ${{ matrix.target }}
-          if [[ "${{ matrix.target }}" == *musl* ]]; then sudo apt-get update && sudo apt-get install -y musl-tools; fi
           if [[ "${{ matrix.target }}" == aarch64-unknown-linux-gnu ]]; then sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu; fi
+      - name: Setup zig (for musl cross)
+        if: ${{ runner.os == 'Linux' && matrix.zigbuild == true }}
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.12.0
+      - name: Install cargo-zigbuild
+        if: ${{ runner.os == 'Linux' && matrix.zigbuild == true }}
+        run: cargo install cargo-zigbuild --locked
       - name: Install toolchains (Windows)
         if: ${{ runner.os == 'Windows' && matrix.target != '' }}
         run: |
@@ -61,7 +70,9 @@ jobs:
       - name: Build native
         working-directory: native/ratatui_ffi
         run: |
-          if [ -n "${{ matrix.target }}" ]; then
+          if [ "${{ matrix.zigbuild }}" = "true" ]; then
+            cargo zigbuild --release --target ${{ matrix.target }}
+          elif [ -n "${{ matrix.target }}" ]; then
             cargo build --release --target ${{ matrix.target }}
           else
             cargo build --release
@@ -83,13 +94,14 @@ jobs:
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
-      - name: Install aarch64 musl toolchain
-        run: |
-          rustup target add aarch64-unknown-linux-musl
-          sudo apt-get update && sudo apt-get install -y musl-tools
+      - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.12.0
+      - name: Install cargo-zigbuild
+        run: cargo install cargo-zigbuild --locked
       - name: Build linux-musl-arm64
         working-directory: native/ratatui_ffi
-        run: cargo build --release --target aarch64-unknown-linux-musl
+        run: cargo zigbuild --release --target aarch64-unknown-linux-musl
       - name: Upload artifact linux-musl-arm64
         uses: actions/upload-artifact@v4
         with:
