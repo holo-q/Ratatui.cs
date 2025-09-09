@@ -5,6 +5,7 @@ Ratatui.cs — .NET/C# Terminal UI (TUI) Library powered by Rust Ratatui
 ![CI](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml/badge.svg)
 [![Guard](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml)
 [![Snapshots](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots.yml)
+[![Snapshots Auto](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots-on-ci.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots-on-ci.yml)
 [![0.30 Alpha](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci-030.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci-030.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/holo-q/Ratatui.cs?logo=github)](https://github.com/holo-q/Ratatui.cs/releases)
 [![NuGet](https://img.shields.io/nuget/v/Ratatui.cs.svg?logo=nuget&label=NuGet)](https://www.nuget.org/packages/Ratatui.cs)
@@ -54,18 +55,40 @@ Console.WriteLine(snapshot);
 ```
 
 Snapshots
-- Paragraph
-  - ![Paragraph snapshot](docs/assets/snapshots/paragraph.png)
-- Table
-  - ![Table snapshot](docs/assets/snapshots/table.png)
-- Chart
-  - ![Chart snapshot](docs/assets/snapshots/chart.png)
-- Tabs
-  - ![Tabs snapshot](docs/assets/snapshots/tabs.png)
-- Gauge
-  - ![Gauge snapshot](docs/assets/snapshots/gauge.png)
-- Combined (mini dashboard)
-  - ![Combined snapshot](docs/assets/snapshots/combined.png)
+
+<table>
+  <tr>
+    <td align="center">
+      <b>Paragraph</b><br/>
+      <img src="docs/assets/snapshots/paragraph.png" alt="Paragraph snapshot" width="300"/>
+    </td>
+    <td align="center">
+      <b>Table</b><br/>
+      <img src="docs/assets/snapshots/table.png" alt="Table snapshot" width="300"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Chart</b><br/>
+      <img src="docs/assets/snapshots/chart.png" alt="Chart snapshot" width="300"/>
+    </td>
+    <td align="center">
+      <b>Tabs</b><br/>
+      <img src="docs/assets/snapshots/tabs.png" alt="Tabs snapshot" width="300"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Gauge</b><br/>
+      <img src="docs/assets/snapshots/gauge.png" alt="Gauge snapshot" width="300"/>
+    </td>
+    <td align="center">
+      <b>Combined (mini dashboard)</b><br/>
+      <img src="docs/assets/snapshots/combined.png" alt="Combined snapshot" width="600"/>
+    </td>
+  </tr>
+  
+</table>
 
 What this is
 - Native Rust cdylib (`native/ratatui_ffi`) with a stable C ABI over Ratatui.
