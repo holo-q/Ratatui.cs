@@ -9,6 +9,7 @@ class Program
     static int Main()
     {
         Directory.CreateDirectory("artifacts/snapshots");
+        var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
         // Paragraph styled spans
         using (var p = new Paragraph("Ratatui.cs ")
@@ -19,7 +20,7 @@ class Program
             .Wrap())
         {
             var txt = Headless.RenderParagraph(32, 6, p);
-            File.WriteAllText("artifacts/snapshots/paragraph.txt", txt, Encoding.UTF8);
+            File.WriteAllText("artifacts/snapshots/paragraph.txt", txt, utf8NoBom);
         }
 
         // Table with column percents
@@ -32,7 +33,7 @@ class Program
             .Selected(1))
         {
             var txt = Headless.RenderTable(30, 8, tbl);
-            File.WriteAllText("artifacts/snapshots/table.txt", txt, Encoding.UTF8);
+            File.WriteAllText("artifacts/snapshots/table.txt", txt, utf8NoBom);
         }
 
         // Chart simple
@@ -40,21 +41,21 @@ class Program
             .Line("L1", (ReadOnlySpan<(double,double)>)new (double,double)[] { (0,1), (1,2.5), (2,1.2) }))
         {
             var txt = Headless.RenderChart(32, 10, ch);
-            File.WriteAllText("artifacts/snapshots/chart.txt", txt, Encoding.UTF8);
+            File.WriteAllText("artifacts/snapshots/chart.txt", txt, utf8NoBom);
         }
 
         // Tabs snapshot
         using (var tabs = new Tabs().Title("Tabs").Titles("One", "Two", "Three").Selected(1))
         {
             var txt = Headless.RenderTabs(32, 3, tabs);
-            File.WriteAllText("artifacts/snapshots/tabs.txt", txt, Encoding.UTF8);
+            File.WriteAllText("artifacts/snapshots/tabs.txt", txt, utf8NoBom);
         }
 
         // Gauge snapshot
         using (var gauge = new Gauge().Title("Gauge").Label("42% ").Ratio(0.42f))
         {
             var txt = Headless.RenderGauge(32, 3, gauge);
-            File.WriteAllText("artifacts/snapshots/gauge.txt", txt, Encoding.UTF8);
+            File.WriteAllText("artifacts/snapshots/gauge.txt", txt, utf8NoBom);
         }
 
         // Combined frame (mini dashboard)
@@ -84,7 +85,7 @@ class Program
                 DrawCommand.Gauge(gauge2, halfRight),
                 DrawCommand.Chart(chart2, halfRight2)
             );
-            File.WriteAllText("artifacts/snapshots/combined.txt", frameTxt, Encoding.UTF8);
+            File.WriteAllText("artifacts/snapshots/combined.txt", frameTxt, utf8NoBom);
         }
 
         return 0;
