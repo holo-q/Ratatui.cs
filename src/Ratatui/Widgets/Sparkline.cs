@@ -22,6 +22,23 @@ public sealed class Sparkline : IDisposable
         return this;
     }
 
+    public Sparkline Values(ReadOnlySpan<ulong> values)
+    {
+        EnsureNotDisposed();
+        if (values.IsEmpty) return this;
+        var arr = System.Buffers.ArrayPool<ulong>.Shared.Rent(values.Length);
+        try
+        {
+            values.CopyTo(arr);
+            Interop.Native.RatatuiSparklineSetValues(_handle.DangerousGetHandle(), arr, (UIntPtr)values.Length);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<ulong>.Shared.Return(arr);
+        }
+        return this;
+    }
+
     public Sparkline Title(string? title, bool border = true)
     {
         EnsureNotDisposed();

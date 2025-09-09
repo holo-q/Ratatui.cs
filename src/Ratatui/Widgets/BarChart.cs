@@ -23,6 +23,24 @@ public sealed class BarChart : IDisposable
         return this;
     }
 
+    public BarChart Values(ReadOnlySpan<ulong> values)
+    {
+        EnsureNotDisposed();
+        if (values.IsEmpty) return this;
+        // P/Invoke takes ulong[]; copy via ArrayPool to minimize allocations.
+        var arr = System.Buffers.ArrayPool<ulong>.Shared.Rent(values.Length);
+        try
+        {
+            values.CopyTo(arr);
+            Interop.Native.RatatuiBarChartSetValues(_handle.DangerousGetHandle(), arr, (UIntPtr)values.Length);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<ulong>.Shared.Return(arr);
+        }
+        return this;
+    }
+
     public BarChart Labels(params string[] labels)
     {
         EnsureNotDisposed();

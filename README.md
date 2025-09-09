@@ -2,6 +2,8 @@ Ratatui.cs — .NET/C# Terminal UI (TUI) Library powered by Rust Ratatui
 
 ![CI](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml/badge.svg)
 [![Guard](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml)
+[![Snapshots](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots.yml)
+[![0.30 Alpha](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci-030.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci-030.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/holo-q/Ratatui.cs?logo=github)](https://github.com/holo-q/Ratatui.cs/releases)
 [![NuGet](https://img.shields.io/nuget/v/Ratatui.cs.svg?logo=nuget&label=NuGet)](https://www.nuget.org/packages/Ratatui.cs)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Ratatui.cs.svg?logo=nuget)](https://www.nuget.org/packages/Ratatui.cs)
@@ -45,17 +47,17 @@ Console.WriteLine(snapshot);
 
 Snapshots
 - Paragraph
-  - docs/assets/snapshots/paragraph.png
+  - ![Paragraph snapshot](docs/assets/snapshots/paragraph.png)
 - Table
-  - docs/assets/snapshots/table.png
+  - ![Table snapshot](docs/assets/snapshots/table.png)
 - Chart
-  - docs/assets/snapshots/chart.png
+  - ![Chart snapshot](docs/assets/snapshots/chart.png)
 - Tabs
-  - docs/assets/snapshots/tabs.png
+  - ![Tabs snapshot](docs/assets/snapshots/tabs.png)
 - Gauge
-  - docs/assets/snapshots/gauge.png
+  - ![Gauge snapshot](docs/assets/snapshots/gauge.png)
 - Combined (mini dashboard)
-  - docs/assets/snapshots/combined.png
+  - ![Combined snapshot](docs/assets/snapshots/combined.png)
 
 What this is
 - Native Rust cdylib (`native/ratatui_ffi`) with a stable C ABI over Ratatui.
@@ -70,6 +72,10 @@ Using via NuGet (CI-packaged)
 - CI builds native libraries for: linux-x64, win-x64, osx-x64, osx-arm64.
 - NuGet includes RID-specific native assets under `runtimes/<rid>/native/`.
 - After CI, download the `.nupkg` from artifacts or releases and reference it in your project.
+
+Snapshots: how they are generated
+- Ad-hoc: run the "snapshots" workflow (workflow_dispatch). It builds the native lib, runs the snapshots example to emit ASCII, converts to PNG via ImageMagick, and uploads both as artifacts.
+- On release tags (vX.Y.Z): the "snapshots-release" workflow generates PNGs and commits them to `docs/assets/snapshots`, keeping this README section's images fresh.
 
 Local dev (build from source)
 1) Build native
@@ -96,6 +102,14 @@ Publishing and feeds
     - `dotnet nuget add source https://nuget.pkg.github.com/holo-q/index.json -n holo-q -u <github-username> -p <github-personal-access-token> --store-password-in-clear-text`
   - Install: `dotnet add package Ratatui.cs --version <x.y.z>`
 - nuget.org (optional): if `NUGET_API_KEY` is set in repo secrets, tags publish to nuget.org as well.
+
+0.30 alpha preview (opt-in)
+- A preview workflow builds Ratatui.cs against ratatui 0.30 (FFI submodule branch `ratatui-0.30`) and publishes a prerelease package to GitHub Packages: `0.2.0-alpha.[run]`.
+- Add GitHub Packages source (once):
+  - `dotnet nuget add source https://nuget.pkg.github.com/holo-q/index.json -n holo-q -u <gh-username> -p <gh-token> --store-password-in-clear-text`
+- Install alpha:
+  - `dotnet add package Ratatui.cs --version 0.2.0-alpha.* --source holo-q`
+- Notes: Scrollbar APIs default on; newer Table alignment options planned once ratatui 0.30 GA stabilizes.
 
 Notes
 - Native library name: `ratatui_ffi` (`libratatui_ffi.so`/`.dylib` or `ratatui_ffi.dll`).
