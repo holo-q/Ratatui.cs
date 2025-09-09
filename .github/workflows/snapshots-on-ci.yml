@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows: ["build-and-pack"]
     types: ["completed"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -56,4 +57,3 @@ jobs:
           git add docs/assets/snapshots/*.png || true
           git commit -m "docs(snapshots): update PNG snapshots for ${{ github.event.workflow_run.head_sha }} [skip ci]" || echo "No changes to commit"
           git push origin main
-
