@@ -80,6 +80,15 @@ jobs:
         with:
           name: nuget
           path: artifacts/*.nupkg
+      - name: Ensure NUGET_API_KEY present (tags only)
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "NUGET_API_KEY is not set for tag publish. Failing." >&2
+            exit 1
+          fi
       - name: Publish to GitHub Packages (tag or main)
         if: ${{ github.ref_type == 'tag' || github.ref_name == 'main' || github.ref_name == 'master' }}
         env:
