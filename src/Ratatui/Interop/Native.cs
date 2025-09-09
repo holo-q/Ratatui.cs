@@ -15,6 +15,9 @@ internal static class Native
         try
         {
             NativeLibrary.SetDllImportResolver(typeof(Native).Assembly, Resolve);
+            // Trigger load and version check once
+            var _ = RatatuiFfiVersion();
+            ValidateVersion();
         }
         catch
         {
@@ -54,6 +57,16 @@ internal static class Native
         // Standard locations
         candidates.Add(Path.Combine(baseDir, fileName));
         candidates.Add(Path.Combine(baseDir, "runtimes", GetRid(), "native", fileName));
+        // Try all known rid folders if specific rid didn't match
+        var runtimesDir = Path.Combine(baseDir, "runtimes");
+        if (Directory.Exists(runtimesDir))
+        {
+            foreach (var ridDir in Directory.EnumerateDirectories(runtimesDir))
+            {
+                var cand = Path.Combine(ridDir, "native", fileName);
+                candidates.Add(cand);
+            }
+        }
         // Dev builds from the repo: climb up to 6 levels just in case
         for (int up = 3; up <= 6; up++)
         {
@@ -87,10 +100,28 @@ internal static class Native
     private static string GetRid()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return Environment.Is64BitProcess ? "win-x64" : "win-x86";
+            return RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "win-arm64" : (Environment.Is64BitProcess ? "win-x64" : "win-x86");
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             return RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "osx-arm64" : "osx-x64";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "linux-arm64" : "linux-x64";
         return "linux-x64";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct FfiVersion { public uint Abi; public ushort ApiMajor; public ushort ApiMinor; public ushort ApiPatch; }
+
+    [DllImport(LibraryName, EntryPoint = "ratatui_ffi_version", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern FfiVersion RatatuiFfiVersion();
+
+    private const uint ExpectedAbi = 1;
+    private static void ValidateVersion()
+    {
+        var v = RatatuiFfiVersion();
+        if (v.Abi != ExpectedAbi)
+        {
+            throw new DllNotFoundException($"ratatui_ffi ABI mismatch: expected {ExpectedAbi}, got {v.Abi}. Make sure the native library matches this package.");
+        }
     }
 
     [DllImport(LibraryName, EntryPoint = "ratatui_init_terminal", CallingConvention = CallingConvention.Cdecl)]

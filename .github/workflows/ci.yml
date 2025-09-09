@@ -22,9 +22,21 @@ jobs:
           - os: ubuntu-latest
             rid: linux-x64
             libname: libratatui_ffi.so
+          - os: ubuntu-latest
+            rid: linux-arm64
+            libname: libratatui_ffi.so
+            target: aarch64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rid: linux-musl-x64
+            libname: libratatui_ffi.so
+            target: x86_64-unknown-linux-musl
           - os: windows-latest
             rid: win-x64
             libname: ratatui_ffi.dll
+          - os: windows-latest
+            rid: win-arm64
+            libname: ratatui_ffi.dll
+            target: aarch64-pc-windows-msvc
           - os: macos-13
             rid: osx-x64
             libname: libratatui_ffi.dylib
@@ -36,19 +48,58 @@ jobs:
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install toolchains (Linux)
+        if: ${{ runner.os == 'Linux' && matrix.target != '' }}
+        run: |
+          rustup target add ${{ matrix.target }}
+          if [[ "${{ matrix.target }}" == *musl* ]]; then sudo apt-get update && sudo apt-get install -y musl-tools; fi
+          if [[ "${{ matrix.target }}" == aarch64-unknown-linux-gnu ]]; then sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu; fi
+      - name: Install toolchains (Windows)
+        if: ${{ runner.os == 'Windows' && matrix.target != '' }}
+        run: |
+          rustup target add ${{ matrix.target }}
       - name: Build native
         working-directory: native/ratatui_ffi
-        run: cargo build --release
+        run: |
+          if [ -n "${{ matrix.target }}" ]; then
+            cargo build --release --target ${{ matrix.target }}
+          else
+            cargo build --release
+          fi
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.rid }}
-          path: native/ratatui_ffi/target/release/${{ matrix.libname }}
+          path: |
+            native/ratatui_ffi/target/release/${{ matrix.libname }}
+            native/ratatui_ffi/target/${{ matrix.target }}/release/${{ matrix.libname }}
+
+  native-optional:
+    name: native-optional
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install aarch64 musl toolchain
+        run: |
+          rustup target add aarch64-unknown-linux-musl
+          sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Build linux-musl-arm64
+        working-directory: native/ratatui_ffi
+        run: cargo build --release --target aarch64-unknown-linux-musl
+      - name: Upload artifact linux-musl-arm64
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-linux-musl-arm64
+          path: native/ratatui_ffi/target/aarch64-unknown-linux-musl/release/libratatui_ffi.so
 
   pack:
     name: pack-nuget
     runs-on: ubuntu-latest
-    needs: native
+    needs: [native, native-optional]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,11 +111,19 @@ jobs:
       - name: Prepare runtimes directory
         run: |
           mkdir -p src/Ratatui/runtimes/linux-x64/native
+          mkdir -p src/Ratatui/runtimes/linux-arm64/native
+          mkdir -p src/Ratatui/runtimes/linux-musl-x64/native
+          mkdir -p src/Ratatui/runtimes/linux-musl-arm64/native
           mkdir -p src/Ratatui/runtimes/win-x64/native
+          mkdir -p src/Ratatui/runtimes/win-arm64/native
           mkdir -p src/Ratatui/runtimes/osx-x64/native
           mkdir -p src/Ratatui/runtimes/osx-arm64/native
           cp native_out/native-linux-x64/libratatui_ffi.so src/Ratatui/runtimes/linux-x64/native/ || true
+          cp native_out/native-linux-arm64/libratatui_ffi.so src/Ratatui/runtimes/linux-arm64/native/ || true
+          cp native_out/native-linux-musl-x64/libratatui_ffi.so src/Ratatui/runtimes/linux-musl-x64/native/ || true
+          cp native_out/native-linux-musl-arm64/libratatui_ffi.so src/Ratatui/runtimes/linux-musl-arm64/native/ || true
           cp native_out/native-win-x64/ratatui_ffi.dll src/Ratatui/runtimes/win-x64/native/ || true
+          cp native_out/native-win-arm64/ratatui_ffi.dll src/Ratatui/runtimes/win-arm64/native/ || true
           cp native_out/native-osx-x64/libratatui_ffi.dylib src/Ratatui/runtimes/osx-x64/native/ || true
           cp native_out/native-osx-arm64/libratatui_ffi.dylib src/Ratatui/runtimes/osx-arm64/native/ || true
       - uses: actions/setup-dotnet@v4
