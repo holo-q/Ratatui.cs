@@ -9,7 +9,7 @@ class Program
         {
             using var term = new Terminal();
             using var para = new Paragraph("Hello AOT").Title("AOT");
-            term.DrawIn(para, new Rect(0, 0, 20, 3));
+            term.Draw(para, new Rect(0, 0, 20, 3));
             return 0;
         }
         catch (Exception ex)
@@ -19,4 +19,3 @@ class Program
         }
     }
 }
-
