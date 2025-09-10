@@ -29,15 +29,7 @@ public sealed class Gauge : IDisposable
         return this;
     }
 
-    public unsafe Gauge Label(ReadOnlySpan<byte> utf8)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = utf8)
-        {
-            Interop.Native.RatatuiGaugeSetLabelBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)utf8.Length);
-        }
-        return this;
-    }
+    // UTF-8 label path can use spans in future.
 
     public Gauge Title(string? title, bool border = true)
     {
@@ -46,15 +38,7 @@ public sealed class Gauge : IDisposable
         return this;
     }
 
-    public unsafe Gauge Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = titleUtf8)
-        {
-            Interop.Native.RatatuiGaugeSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
-        }
-        return this;
-    }
+    // UTF-8 title path can use spans in future.
 
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Gauge)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }

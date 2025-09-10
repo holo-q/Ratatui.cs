@@ -38,4 +38,15 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
+
+  <!-- Build-time FFI coverage check: ensure every ratatui_ffi export has a matching DllImport. -->
+  <PropertyGroup>
+    <!-- Set to 'true' to skip the coverage check (not recommended). -->
+    <SkipFfiCoverage Condition="'$(SkipFfiCoverage)' == ''">false</SkipFfiCoverage>
+  </PropertyGroup>
+
+  <Target Name="CheckFfiCoverage" AfterTargets="Build" Condition=" '$(SkipFfiCoverage)' != 'true' ">
+    <Message Importance="High" Text="Checking FFI coverage for $(TargetFramework) ($(Configuration))..." />
+    <Exec Command="dotnet run --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot;" />
+  </Target>
 </Project>

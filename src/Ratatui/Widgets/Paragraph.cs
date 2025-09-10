@@ -18,15 +18,7 @@ public sealed class Paragraph : IDisposable
         _handle = ParagraphHandle.FromRaw(ptr);
     }
 
-    public unsafe Paragraph(ReadOnlySpan<byte> utf8Text)
-    {
-        fixed (byte* p = utf8Text)
-        {
-            var ptr = Interop.Native.RatatuiParagraphNewBytes((IntPtr)p, (UIntPtr)utf8Text.Length);
-            if (ptr == IntPtr.Zero) throw new InvalidOperationException("Failed to create Paragraph");
-            _handle = ParagraphHandle.FromRaw(ptr);
-        }
-    }
+    // For zero-allocation construction with UTF-8, consider a future Span-based builder.
 
     public Paragraph Title(string? title, bool border = true)
     {
@@ -35,15 +27,7 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
-    public unsafe Paragraph Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = titleUtf8)
-        {
-            Interop.Native.RatatuiParagraphSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
-        }
-        return this;
-    }
+    // UTF-8 title overload can be restored using spans+adv APIs if needed.
 
     public Paragraph AppendLine(string text, Style? style = null)
     {
@@ -52,15 +36,7 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
-    public unsafe Paragraph AppendLine(ReadOnlySpan<byte> utf8, Style? style = null)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = utf8)
-        {
-            Interop.Native.RatatuiParagraphAppendLineBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)utf8.Length, (style ?? default).ToFfi());
-        }
-        return this;
-    }
+    // Span-based overload can be reintroduced via AppendLineSpans.
 
     public Paragraph AppendSpan(string text, Style? style = null)
     {
@@ -69,20 +45,12 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
-    public unsafe Paragraph AppendSpan(ReadOnlySpan<byte> utf8, Style? style = null)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = utf8)
-        {
-            Interop.Native.RatatuiParagraphAppendSpanBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)utf8.Length, (style ?? default).ToFfi());
-        }
-        return this;
-    }
+    // Span-based overload can be reintroduced via AppendSpans.
 
     public Paragraph NewLine()
     {
         EnsureNotDisposed();
-        Interop.Native.RatatuiParagraphNewLine(_handle.DangerousGetHandle());
+        Interop.Native.RatatuiParagraphLineBreak(_handle.DangerousGetHandle());
         return this;
     }
 

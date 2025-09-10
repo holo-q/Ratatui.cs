@@ -142,3 +142,35 @@ public sealed class ChartHandle : SafeHandle
     internal static ChartHandle FromRaw(IntPtr ptr) { var h = new ChartHandle(); h.SetHandle(ptr); return h; }
     protected override bool ReleaseHandle() { if (!IsInvalid) Interop.Native.RatatuiChartFree(handle); return true; }
 }
+
+public sealed class LineGaugeHandle : SafeHandle
+{
+    public LineGaugeHandle() : base(IntPtr.Zero, ownsHandle: true) {}
+    public override bool IsInvalid => handle == IntPtr.Zero || handle == new IntPtr(-1);
+    internal static LineGaugeHandle FromRaw(IntPtr ptr) { var h = new LineGaugeHandle(); h.SetHandle(ptr); return h; }
+    protected override bool ReleaseHandle() { if (!IsInvalid) Interop.Native.RatatuiLineGaugeFree(handle); return true; }
+}
+
+public sealed class CanvasHandle : SafeHandle
+{
+    public CanvasHandle() : base(IntPtr.Zero, ownsHandle: true) {}
+    public override bool IsInvalid => handle == IntPtr.Zero || handle == new IntPtr(-1);
+    internal static CanvasHandle FromRaw(IntPtr ptr) { var h = new CanvasHandle(); h.SetHandle(ptr); return h; }
+    protected override bool ReleaseHandle() { if (!IsInvalid) Interop.Native.RatatuiCanvasFree(handle); return true; }
+}
+
+public sealed class ListStateHandle : SafeHandle
+{
+    public ListStateHandle() : base(IntPtr.Zero, ownsHandle: true) {}
+    public override bool IsInvalid => handle == IntPtr.Zero || handle == new IntPtr(-1);
+    internal static ListStateHandle FromRaw(IntPtr ptr) { var h = new ListStateHandle(); h.SetHandle(ptr); return h; }
+    protected override bool ReleaseHandle() { if (!IsInvalid) Interop.Native.RatatuiListStateFree(handle); return true; }
+}
+
+public sealed class TableStateHandle : SafeHandle
+{
+    public TableStateHandle() : base(IntPtr.Zero, ownsHandle: true) {}
+    public override bool IsInvalid => handle == IntPtr.Zero || handle == new IntPtr(-1);
+    internal static TableStateHandle FromRaw(IntPtr ptr) { var h = new TableStateHandle(); h.SetHandle(ptr); return h; }
+    protected override bool ReleaseHandle() { if (!IsInvalid) Interop.Native.RatatuiTableStateFree(handle); return true; }
+}

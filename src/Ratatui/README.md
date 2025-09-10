@@ -17,6 +17,14 @@ Features
 - Headless rendering: snapshot widgets or full frames to ASCII
 - Cross-platform native loading: robust resolver + env var overrides
 
+Ergonomics (C#)
+
+- RAII terminal toggles: `Raw(true)`, `AltScreen(true)`, `ShowCursor(false)`, `Viewport` property; safe unwind on `Dispose`.
+- Uniform borders/padding/alignment: `BlockAdv` + `WithBlock(...)` extensions on widgets; zero allocations.
+- Batch‑friendly APIs: append spans/lines/rows in one call to reduce interop overhead.
+- Headless helpers: `Ratatui.Testing.Headless` methods render widgets/frames deterministically for tests.
+- See the full guide in `docs/csharp-ergonomics.md` for patterns, performance tips, and examples.
+
 Why Ratatui.cs?
 
 - Rust‑powered performance with Ratatui engine and efficient FFI.
@@ -100,13 +108,42 @@ Supported RIDs
 Troubleshooting
 
 - DllNotFoundException: set `RATATUI_FFI_DIR` to where your native lib lives, or ensure your app deploys `runtimes/<rid>/native/*ratatui_ffi*` alongside your binaries.
+- Version/feature detection: we call `ratatui_ffi_version(&maj,&min,&patch)` and `ratatui_ffi_feature_bits()` at load to ensure compatibility and enable optional features.
 - Headless rendering returns UTF-8 text; ensure your asserts treat it as UTF-8.
+
+FFI coverage enforcement
+
+- The build runs a strict coverage checker to ensure every `ratatui_*` FFI export has a matching `DllImport` in the C# bindings. Missing or stale entries fail the build.
+- The checker scans `native/ratatui-ffi/src/**/*.rs` for `#[no_mangle] extern "C" fn` and diff’s against compiled P/Invoke entry points using reflection without loading the native library.
+- To bypass temporarily (not recommended), build with `-p:SkipFfiCoverage=true`.
 
 Links
 
 - Repo: https://github.com/holo-q/Ratatui.cs
 - FFI (Rust): https://github.com/holo-q/ratatui-ffi
 - Ratatui (upstream): https://github.com/ratatui-org/ratatui
+
+C# Idioms & Performance
+
+- Prefer Span/ReadOnlySpan overloads where available to avoid allocations. Most append/set APIs have `ReadOnlySpan<byte>` UTF‑8 variants.
+- Use BlockAdv for borders/padding/title alignment with zero extra allocations:
+  - Example: `para.WithBlock(new BlockAdv(Borders.All, BorderType.Plain, Padding.All(1), Alignment.Center));`
+  - Titles can still be set via fast UTF‑8 span overloads (`Title(ReadOnlySpan<byte>)`).
+- Batch where possible:
+  - List/Table/Tabs/Paragraph have batching helpers internally; push multiple items/spans in one call to reduce interop overhead.
+- Colors: prefer `Style` with named colors for zero marshaling. When you need RGB/indexed, use helpers backing native encoding (`Native.RatatuiColorRgb`, `Native.RatatuiColorIndexed`) and construct `Style` from raw values at the interop boundary.
+- State: use `ListState`/`TableState` for selection/offset to keep UI logic and drawing decoupled and efficient.
+- Terminal: wrap raw/alt/cursor toggles in a `using var term = new Terminal();` and call `term.Raw(true).AltScreen(true)` for safe unwinding in `Dispose`.
+- Headless testing: use `Headless.Render(...)`, `RenderStylesEx(...)`, and `RenderCells(...)` to snapshot without the console; these are allocation‑light and deterministic.
+
+Notes on native interop vs C# sugar
+
+- The native layer is 1:1 with ratatui_ffi for stability and portability (explicit ownership, flat C ABI).
+- The C# layer adds ergonomics (fluent methods, `BlockAdv`, Span‑based overloads, SafeHandles) while preserving performance:
+  - All hot paths avoid heap allocations where possible (stackalloc/ArrayPool; zero‑copy spans).
+  - Structs (`Rect`, `Style`, `Padding`, etc.) are immutable value types passed by readonly ref where sensible.
+  - Batching APIs minimize the number of P/Invoke calls.
+- If you need to drop to native calls for something niche, consider filing an issue or PR to expose a zero‑cost C# helper — we aim for parity without sacrificing ergonomics.
 
 License
 

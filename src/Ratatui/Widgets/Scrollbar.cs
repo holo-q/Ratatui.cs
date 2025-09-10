@@ -31,15 +31,7 @@ public sealed class Scrollbar : IDisposable
         return this;
     }
 
-    public unsafe Scrollbar Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = titleUtf8)
-        {
-            Interop.Native.RatatuiScrollbarSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
-        }
-        return this;
-    }
+    // UTF-8 title path can use spans in future.
 
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Scrollbar)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }

@@ -23,15 +23,7 @@ public sealed class Chart : IDisposable
         return this;
     }
 
-    public unsafe Chart Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = titleUtf8)
-        {
-            Interop.Native.RatatuiChartSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
-        }
-        return this;
-    }
+    // UTF-8 title path can use spans in future.
 
     public Chart Axes(string? xTitle = null, string? yTitle = null)
     {
@@ -43,7 +35,7 @@ public sealed class Chart : IDisposable
     public Chart AxesBounds(double xMin, double xMax, double yMin, double yMax)
     {
         EnsureNotDisposed();
-        Interop.Native.RatatuiChartSetAxesBounds(_handle.DangerousGetHandle(), xMin, xMax, yMin, yMax);
+        Interop.Native.RatatuiChartSetBounds(_handle.DangerousGetHandle(), xMin, xMax, yMin, yMax);
         return this;
     }
 

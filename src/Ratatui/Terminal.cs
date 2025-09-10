@@ -8,6 +8,9 @@ public sealed class Terminal : IDisposable
 {
     private readonly TerminalHandle _handle;
     private bool _disposed;
+    private bool _raw;
+    private bool _alt;
+    private bool _cursorShown = true;
 
     public Terminal()
     {
@@ -24,6 +27,65 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         Interop.Native.RatatuiTerminalClear(_handle.DangerousGetHandle());
+    }
+
+    // Ergonomic toggles (RAII-safe): Raw mode, Alt screen, Cursor visibility
+    public Terminal Raw(bool on = true)
+    {
+        EnsureNotDisposed();
+        var ok = on ? Interop.Native.RatatuiTerminalEnableRaw(_handle.DangerousGetHandle())
+                    : Interop.Native.RatatuiTerminalDisableRaw(_handle.DangerousGetHandle());
+        if (ok) _raw = on;
+        return this;
+    }
+
+    public Terminal AltScreen(bool on = true)
+    {
+        EnsureNotDisposed();
+        var ok = on ? Interop.Native.RatatuiTerminalEnterAlt(_handle.DangerousGetHandle())
+                    : Interop.Native.RatatuiTerminalLeaveAlt(_handle.DangerousGetHandle());
+        if (ok) _alt = on;
+        return this;
+    }
+
+    public Terminal ShowCursor(bool show = true)
+    {
+        EnsureNotDisposed();
+        if (Interop.Native.RatatuiTerminalShowCursor(_handle.DangerousGetHandle(), show))
+            _cursorShown = show;
+        return this;
+    }
+
+    public (ushort X, ushort Y) GetCursor()
+    {
+        EnsureNotDisposed();
+        if (!Interop.Native.RatatuiTerminalGetCursorPosition(_handle.DangerousGetHandle(), out var x, out var y))
+            throw new InvalidOperationException("GetCursor failed");
+        return (x, y);
+    }
+
+    public Terminal SetCursor(ushort x, ushort y)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTerminalSetCursorPosition(_handle.DangerousGetHandle(), x, y);
+        return this;
+    }
+
+    public Rect Viewport
+    {
+        get
+        {
+            EnsureNotDisposed();
+            if (!Interop.Native.RatatuiTerminalGetViewportArea(_handle.DangerousGetHandle(), out var r))
+                return default;
+            return new Rect(r.X, r.Y, r.Width, r.Height);
+        }
+        set
+        {
+            EnsureNotDisposed();
+            var r = new Interop.Native.FfiRect { X = (ushort)value.X, Y = (ushort)value.Y, Width = (ushort)value.Width, Height = (ushort)value.Height };
+            Interop.Native.RatatuiTerminalSetViewportArea(_handle.DangerousGetHandle(), r);
+        }
     }
 
     public void Draw(Paragraph paragraph)
@@ -190,7 +252,16 @@ public sealed class Terminal : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _handle.Dispose();
+        try
+        {
+            if (!_cursorShown) Interop.Native.RatatuiTerminalShowCursor(_handle.DangerousGetHandle(), true);
+            if (_alt) Interop.Native.RatatuiTerminalLeaveAlt(_handle.DangerousGetHandle());
+            if (_raw) Interop.Native.RatatuiTerminalDisableRaw(_handle.DangerousGetHandle());
+        }
+        finally
+        {
+            _handle.Dispose();
+        }
         _disposed = true;
     }
 

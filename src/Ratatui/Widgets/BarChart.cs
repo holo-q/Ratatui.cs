@@ -49,15 +49,7 @@ public sealed class BarChart : IDisposable
         return this;
     }
 
-    public unsafe BarChart Labels(ReadOnlySpan<byte> labelsTsvUtf8)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = labelsTsvUtf8)
-        {
-            Interop.Native.RatatuiBarChartSetLabelsBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)labelsTsvUtf8.Length);
-        }
-        return this;
-    }
+    // UTF-8 labels path can use spans in future.
 
     public BarChart Title(string? title, bool border = true)
     {
@@ -66,15 +58,7 @@ public sealed class BarChart : IDisposable
         return this;
     }
 
-    public unsafe BarChart Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = titleUtf8)
-        {
-            Interop.Native.RatatuiBarChartSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
-        }
-        return this;
-    }
+    // UTF-8 title path can use spans in future.
 
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(BarChart)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }

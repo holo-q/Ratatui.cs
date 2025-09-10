@@ -23,15 +23,7 @@ public sealed class Tabs : IDisposable
         return this;
     }
 
-    public unsafe Tabs Titles(ReadOnlySpan<byte> titlesTsvUtf8)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = titlesTsvUtf8)
-        {
-            Interop.Native.RatatuiTabsSetTitlesBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titlesTsvUtf8.Length);
-        }
-        return this;
-    }
+    // UTF-8 titles path can use spans in future.
 
     public Tabs Selected(int index)
     {
@@ -47,15 +39,7 @@ public sealed class Tabs : IDisposable
         return this;
     }
 
-    public unsafe Tabs Title(ReadOnlySpan<byte> titleUtf8, bool border = true)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = titleUtf8)
-        {
-            Interop.Native.RatatuiTabsSetBlockTitleBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)titleUtf8.Length, border);
-        }
-        return this;
-    }
+    // UTF-8 title path can use spans in future.
 
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Tabs)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }

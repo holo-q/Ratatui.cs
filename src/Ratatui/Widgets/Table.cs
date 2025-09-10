@@ -32,15 +32,7 @@ public sealed class Table : IDisposable
         return this;
     }
 
-    public unsafe Table Headers(ReadOnlySpan<byte> headersTsvUtf8)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = headersTsvUtf8)
-        {
-            Interop.Native.RatatuiTableSetHeadersBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)headersTsvUtf8.Length);
-        }
-        return this;
-    }
+    // UTF-8 headers path can use spans in future.
 
     public Table AppendRow(params string[] cells)
     {
@@ -50,22 +42,14 @@ public sealed class Table : IDisposable
         return this;
     }
 
-    public unsafe Table AppendRow(ReadOnlySpan<byte> rowTsvUtf8)
-    {
-        EnsureNotDisposed();
-        fixed (byte* p = rowTsvUtf8)
-        {
-            Interop.Native.RatatuiTableAppendRowBytes(_handle.DangerousGetHandle(), (IntPtr)p, (UIntPtr)rowTsvUtf8.Length);
-        }
-        return this;
-    }
+    // UTF-8 row path can use spans in future.
 
     public Table ColumnPercents(params ushort[] percents)
     {
         EnsureNotDisposed();
         var vals = percents ?? Array.Empty<ushort>();
         if (vals.Length == 0) return this;
-        Interop.Native.RatatuiTableSetColumnPercents(_handle.DangerousGetHandle(), vals, (UIntPtr)vals.Length);
+        Interop.Native.RatatuiTableSetWidthsPercentages(_handle.DangerousGetHandle(), vals, (UIntPtr)vals.Length);
         return this;
     }
 
