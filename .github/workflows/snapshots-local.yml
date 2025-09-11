@@ -1,4 +1,4 @@
-name: snapshots
+name: snapshots-local
 
 on:
   workflow_dispatch:
