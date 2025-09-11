@@ -24,11 +24,25 @@ public sealed class Table : IDisposable
         return this;
     }
 
+    public Table Title(ReadOnlySpan<byte> utf8, bool border = true)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetBlockTitle(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8), border);
+        return this;
+    }
+
     public Table Headers(params string[] cells)
     {
         EnsureNotDisposed();
         var tsv = string.Join("\t", cells ?? Array.Empty<string>());
         Interop.Native.RatatuiTableSetHeaders(_handle.DangerousGetHandle(), tsv);
+        return this;
+    }
+
+    public Table Headers(ReadOnlySpan<byte> tsvUtf8)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetHeaders(_handle.DangerousGetHandle(), tsvUtf8.IsEmpty ? string.Empty : System.Text.Encoding.UTF8.GetString(tsvUtf8));
         return this;
     }
 
@@ -49,6 +63,13 @@ public sealed class Table : IDisposable
         EnsureNotDisposed();
         var tsv = string.Join("\t", cells ?? Array.Empty<string>());
         Interop.Native.RatatuiTableAppendRow(_handle.DangerousGetHandle(), tsv);
+        return this;
+    }
+
+    public Table AppendRow(ReadOnlySpan<byte> tsvUtf8)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableAppendRow(_handle.DangerousGetHandle(), tsvUtf8.IsEmpty ? string.Empty : System.Text.Encoding.UTF8.GetString(tsvUtf8));
         return this;
     }
 

@@ -49,7 +49,13 @@ public sealed class BarChart : IDisposable
         return this;
     }
 
-    // UTF-8 labels path can use spans in future.
+    // UTF-8 TSV labels (allocates a string due to FFI signature)
+    public BarChart Labels(ReadOnlySpan<byte> tsvUtf8)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiBarChartSetLabels(_handle.DangerousGetHandle(), tsvUtf8.IsEmpty ? string.Empty : System.Text.Encoding.UTF8.GetString(tsvUtf8));
+        return this;
+    }
 
     public BarChart Title(string? title, bool border = true)
     {
@@ -58,7 +64,12 @@ public sealed class BarChart : IDisposable
         return this;
     }
 
-    // UTF-8 title path can use spans in future.
+    public BarChart Title(ReadOnlySpan<byte> utf8, bool border = true)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiBarChartSetBlockTitle(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8), border);
+        return this;
+    }
 
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(BarChart)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }

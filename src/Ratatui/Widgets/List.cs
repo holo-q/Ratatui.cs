@@ -31,6 +31,20 @@ public sealed class List : IDisposable
         return this;
     }
 
+    // Zero-alloc overload from UTF-8 bytes (e.g. "text"u8)
+    public unsafe List AppendItem(ReadOnlySpan<byte> utf8, Style? style = null)
+    {
+        EnsureNotDisposed();
+        var sty = style ?? default;
+        var buf = stackalloc byte[utf8.Length + 1];
+        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+        buf[utf8.Length] = 0;
+        var ffiSpans = stackalloc Interop.Native.FfiSpan[1];
+        ffiSpans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = sty.ToFfi() };
+        Interop.Native.RatatuiListAppendItemSpans(_handle.DangerousGetHandle(), (IntPtr)ffiSpans, (UIntPtr)1);
+        return this;
+    }
+
     // Append a single list item composed of styled spans (UTF-8), allocation-light.
     public List AppendItem(ReadOnlySpan<Batching.SpanRun> runs)
     {

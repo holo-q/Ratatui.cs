@@ -29,12 +29,27 @@ public sealed class Gauge : IDisposable
         return this;
     }
 
+    public Gauge Label(ReadOnlySpan<byte> utf8)
+    {
+        EnsureNotDisposed();
+        // FFI expects LPUTF8Str; create a transient string as there is no spans variant.
+        Interop.Native.RatatuiGaugeSetLabel(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8));
+        return this;
+    }
+
     // UTF-8 label path can use spans in future.
 
     public Gauge Title(string? title, bool border = true)
     {
         EnsureNotDisposed();
         Interop.Native.RatatuiGaugeSetBlockTitle(_handle.DangerousGetHandle(), title, border);
+        return this;
+    }
+
+    public Gauge Title(ReadOnlySpan<byte> utf8, bool border = true)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiGaugeSetBlockTitle(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8), border);
         return this;
     }
 

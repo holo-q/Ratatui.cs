@@ -70,6 +70,16 @@ public sealed class Tabs : IDisposable
         return this;
     }
 
+    // Zero-alloc divider from UTF-8 bytes
+    public unsafe Tabs Divider(ReadOnlySpan<byte> utf8)
+    {
+        EnsureNotDisposed();
+        // If FFI only exposes LPUTF8Str, we cannot pass a raw pointer without a custom P/Invoke.
+        // Fall back to string creation; keep this method for API symmetry even if it allocates.
+        Interop.Native.RatatuiTabsSetDivider(_handle.DangerousGetHandle(), System.Text.Encoding.UTF8.GetString(utf8));
+        return this;
+    }
+
     public Tabs Styles(Style unselected, Style selected, Style divider)
     {
         EnsureNotDisposed();

@@ -29,6 +29,13 @@ public sealed class LineGauge : IDisposable
         return this;
     }
 
+    public LineGauge Label(ReadOnlySpan<byte> utf8)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiLineGaugeSetLabel(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8));
+        return this;
+    }
+
     public LineGauge Style(Style s)
     {
         EnsureNotDisposed();
@@ -39,4 +46,3 @@ public sealed class LineGauge : IDisposable
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(LineGauge)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }
 }
-
