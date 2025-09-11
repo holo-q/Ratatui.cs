@@ -13,6 +13,8 @@
 
 High-performance, cross-platform Terminal UI (TUI) for .NET and C#. Ratatui.cs exposes the battle-tested Rust Ratatui engine over a stable FFI with an idiomatic C# API. Build rich console apps with widgets, layout, keyboard/mouse events, batched frame rendering, and headless snapshot testing. Works on Windows, Linux, and macOS.
 
+Performance promise: zero-allocation hot paths. We design the C# layer to honor Rust’s performance standards — span-first APIs, stackalloc/ArrayPool, and batched FFI calls. Most text setters offer `ReadOnlySpan<byte>` ("u8") overloads and batched span builders to avoid heap allocations in frame loops. We also ship a build-time coverage guard to keep 100% parity with the native FFI and fail on drift.
+
 ## Features
 - Rich widgets: Paragraph, List (stateful), Table (stateful), Gauge, Tabs, BarChart, Sparkline, Scrollbar.
 - Input events: Keyboard and mouse (down/up/drag/move/scroll + modifiers), resize.
@@ -22,7 +24,7 @@ High-performance, cross-platform Terminal UI (TUI) for .NET and C#. Ratatui.cs e
 - Cross-platform: Prebuilt native binaries per RID (linux-x64, win-x64, osx-x64, osx-arm64).
 
 ## Why Ratatui.cs?
-- Performance first: powered by Rust Ratatui engine, efficient rendering + input.
+- Performance first: powered by Rust Ratatui engine, efficient rendering + input. Zero-allocation hot paths via `ReadOnlySpan<byte>` (u8) overloads and batching; we actively avoid heap churn in frame loops and hold ourselves to Rust-grade perf.
 - Production ready: headless snapshot testing for CI with deterministic results.
 - Idiomatic C#: fluent, disposable widgets and safe handles, simple layout.
 - Cross‑platform binaries: Windows, Linux, macOS with per‑RID native assets.
