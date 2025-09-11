@@ -172,6 +172,32 @@ public sealed class Table : IDisposable
         return this;
     }
 
+    // Preset width helpers
+    public Table WidthsEven(int columns)
+    {
+        if (columns <= 0) return this;
+        var pct = (ushort)(100 / Math.Max(1, columns));
+        Span<ushort> widths = columns <= 32 ? stackalloc ushort[columns] : new ushort[columns];
+        for (int i = 0; i < columns; i++) widths[i] = pct;
+        return WidthsPercentages(widths);
+    }
+
+    public Table WidthsAbsolute(ReadOnlySpan<ushort> lengths)
+    {
+        if (lengths.IsEmpty) return this;
+        Span<(TableWidthKind kind, ushort val)> specs = lengths.Length <= 32 ? stackalloc (TableWidthKind, ushort)[lengths.Length] : new (TableWidthKind, ushort)[lengths.Length];
+        for (int i = 0; i < lengths.Length; i++) specs[i] = (TableWidthKind.Length, lengths[i]);
+        return Widths(specs);
+    }
+
+    public Table WidthsMin(ReadOnlySpan<ushort> mins)
+    {
+        if (mins.IsEmpty) return this;
+        Span<(TableWidthKind kind, ushort val)> specs = mins.Length <= 32 ? stackalloc (TableWidthKind, ushort)[mins.Length] : new (TableWidthKind, ushort)[mins.Length];
+        for (int i = 0; i < mins.Length; i++) specs[i] = (TableWidthKind.Min, mins[i]);
+        return Widths(specs);
+    }
+
     private void EnsureNotDisposed()
     {
         if (_disposed) throw new ObjectDisposedException(nameof(Table));

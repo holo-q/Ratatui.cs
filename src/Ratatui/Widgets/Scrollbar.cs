@@ -56,6 +56,40 @@ public sealed class Scrollbar : IDisposable
         return this;
     }
 
+    // UX helpers (clamped motion)
+    private ushort ClampPos(int pos)
+    {
+        if (_viewportLen == 0) return 0;
+        var max = _contentLen > _viewportLen ? (int)(_contentLen - _viewportLen) : 0;
+        if (pos < 0) pos = 0; else if (pos > max) pos = max;
+        return (ushort)pos;
+    }
+
+    public Scrollbar LineUp(int lines = 1) => ClampPosition(_position - Math.Max(1, lines));
+    public Scrollbar LineDown(int lines = 1) => ClampPosition(_position + Math.Max(1, lines));
+
+    public Scrollbar PageUp() => ClampPosition(_position - Math.Max(1, _viewportLen - 1));
+    public Scrollbar PageDown() => ClampPosition(_position + Math.Max(1, _viewportLen - 1));
+
+    public Scrollbar ScrollToStart() => ClampPosition(0);
+    public Scrollbar ScrollToEnd() => ClampPosition(_contentLen);
+
+    public Scrollbar EnsureVisible(int index)
+    {
+        var start = _position;
+        var end = (int)_position + Math.Max(0, (int)_viewportLen - 1);
+        if (index < start) return ClampPosition(index);
+        if (index > end) return ClampPosition(index - Math.Max(0, (int)_viewportLen - 1));
+        return this;
+    }
+
+    public Scrollbar ClampPosition(int pos)
+    {
+        var clamped = ClampPos(pos);
+        if (clamped == _position) return this;
+        return Configure(_orient, clamped, _contentLen, _viewportLen);
+    }
+
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Scrollbar)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }
 }
