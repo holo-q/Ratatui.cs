@@ -41,29 +41,9 @@ public static class ParagraphExtensions
         => p.AppendSpan(" ");
 
     // Zero-alloc overloads that accept UTF-8 bytes (e.g., "text"u8)
-    public static unsafe Paragraph SpanUtf8(this Paragraph p, ReadOnlySpan<byte> utf8, Style? style = null)
-    {
-        var sty = style ?? default;
-        // Ensure NUL-terminated buffer on stack
-        var buf = stackalloc byte[utf8.Length + 1];
-        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
-        buf[utf8.Length] = 0;
-        // Build single-span array on stack and invoke FFI directly
-        var spans = stackalloc Interop.Native.FfiSpan[1];
-        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = sty.ToFfi() };
-        Interop.Native.RatatuiParagraphAppendSpans(p.DangerousHandle, (IntPtr)spans, (UIntPtr)1);
-        return p;
-    }
+    public static Paragraph SpanUtf8(this Paragraph p, ReadOnlySpan<byte> utf8, Style? style = null)
+        => p.AppendSpan(utf8, style);
 
-    public static unsafe Paragraph LineUtf8(this Paragraph p, ReadOnlySpan<byte> utf8, Style? style = null)
-    {
-        var sty = style ?? default;
-        var buf = stackalloc byte[utf8.Length + 1];
-        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
-        buf[utf8.Length] = 0;
-        var spans = stackalloc Interop.Native.FfiSpan[1];
-        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = sty.ToFfi() };
-        Interop.Native.RatatuiParagraphAppendLineSpans(p.DangerousHandle, (IntPtr)spans, (UIntPtr)1);
-        return p;
-    }
+    public static Paragraph LineUtf8(this Paragraph p, ReadOnlySpan<byte> utf8, Style? style = null)
+        => p.AppendLine(utf8, style);
 }

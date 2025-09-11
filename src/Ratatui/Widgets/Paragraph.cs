@@ -18,7 +18,23 @@ public sealed class Paragraph : IDisposable
         _handle = ParagraphHandle.FromRaw(ptr);
     }
 
-    // For zero-allocation construction with UTF-8, consider a future Span-based builder.
+    // Zero-allocation constructor from UTF-8 bytes (e.g. "text"u8)
+    public unsafe Paragraph(ReadOnlySpan<byte> utf8)
+    {
+        var ptr = Interop.Native.RatatuiParagraphNewEmpty();
+        if (ptr == IntPtr.Zero)
+            throw new InvalidOperationException("Failed to create Paragraph");
+        _handle = ParagraphHandle.FromRaw(ptr);
+        if (!utf8.IsEmpty)
+        {
+            var buf = stackalloc byte[utf8.Length + 1];
+            utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+            buf[utf8.Length] = 0;
+            var spans = stackalloc Interop.Native.FfiSpan[1];
+            spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
+            Interop.Native.RatatuiParagraphAppendLineSpans(_handle.DangerousGetHandle(), (IntPtr)spans, (UIntPtr)1);
+        }
+    }
 
     public Paragraph Title(string? title, bool border = true)
     {
@@ -36,12 +52,40 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
+    // Zero-allocation overload from UTF-8 bytes (e.g. "text"u8)
+    public unsafe Paragraph AppendLine(ReadOnlySpan<byte> utf8, Style? style = null)
+    {
+        EnsureNotDisposed();
+        var sty = style ?? default;
+        var buf = stackalloc byte[utf8.Length + 1];
+        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+        buf[utf8.Length] = 0;
+        var spans = stackalloc Interop.Native.FfiSpan[1];
+        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = sty.ToFfi() };
+        Interop.Native.RatatuiParagraphAppendLineSpans(_handle.DangerousGetHandle(), (IntPtr)spans, (UIntPtr)1);
+        return this;
+    }
+
     // Span-based overload can be reintroduced via AppendLineSpans.
 
     public Paragraph AppendSpan(string text, Style? style = null)
     {
         EnsureNotDisposed();
         Interop.Native.RatatuiParagraphAppendSpan(_handle.DangerousGetHandle(), text, (style ?? default).ToFfi());
+        return this;
+    }
+
+    // Zero-allocation overload from UTF-8 bytes (e.g. "text"u8)
+    public unsafe Paragraph AppendSpan(ReadOnlySpan<byte> utf8, Style? style = null)
+    {
+        EnsureNotDisposed();
+        var sty = style ?? default;
+        var buf = stackalloc byte[utf8.Length + 1];
+        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+        buf[utf8.Length] = 0;
+        var spans = stackalloc Interop.Native.FfiSpan[1];
+        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = sty.ToFfi() };
+        Interop.Native.RatatuiParagraphAppendSpans(_handle.DangerousGetHandle(), (IntPtr)spans, (UIntPtr)1);
         return this;
     }
 
