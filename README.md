@@ -1,6 +1,8 @@
-<img src="src/Ratatui/ratatui-logo.svg" width="120" align="right" alt="Ratatui.cs logo"/>
 
-# Ratatui.cs — .NET/C# Terminal UI (TUI) Library powered by Rust Ratatui
+<!-- <img src="" alt="ratatui_ffi logo" width="36"/> -->
+<img src="./logo.webp" width="120" align="right" alt="Ratatui.cs logo"/>
+
+#  Ratatui.cs — .NET/C# Terminal UI (TUI) Library powered by Rust Ratatui
 
 ![CI](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml/badge.svg)
 [![Guard](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml)
