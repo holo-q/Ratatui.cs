@@ -29,6 +29,16 @@ public static class Headless
         finally { Interop.Native.RatatuiStringFree(ptr); }
     }
 
+    public static string RenderListState(int width, int height, List list, ListState state)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (state is null) throw new ArgumentNullException(nameof(state));
+        var ok = Interop.Native.RatatuiHeadlessRenderListState((ushort)width, (ushort)height, list.DangerousHandle, state.DangerousHandle, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless list(state) render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
+
     public static string RenderTable(int width, int height, Table table)
     {
         if (table is null) throw new ArgumentNullException(nameof(table));

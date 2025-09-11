@@ -316,4 +316,23 @@ public sealed class Terminal : IDisposable
             }
         }, cancellationToken);
     }
+    public void Draw(List list, Rect rect, ListState state)
+    {
+        EnsureNotDisposed();
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (state is null) throw new ArgumentNullException(nameof(state));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawListStateIn(_handle.DangerousGetHandle(), list.DangerousHandle, r, state.DangerousHandle);
+        if (!ok) throw new InvalidOperationException("DrawListState failed");
+    }
+
+    public void Draw(Table table, Rect rect, TableState state)
+    {
+        EnsureNotDisposed();
+        if (table is null) throw new ArgumentNullException(nameof(table));
+        if (state is null) throw new ArgumentNullException(nameof(state));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawTableStateIn(_handle.DangerousGetHandle(), table.DangerousHandle, r, state.DangerousHandle);
+        if (!ok) throw new InvalidOperationException("DrawTableState failed");
+    }
 }
