@@ -33,6 +33,8 @@ jobs:
           cp native/ratatui-ffi/target/release/libratatui_ffi.so examples/Snapshots/runtimes/linux-x64/native/
       - name: Run snapshots example
         shell: bash
+        env:
+          RATATUI_FFI_DIR: ${{ github.workspace }}/native/ratatui-ffi/target/release
         run: |
           set -euo pipefail
           if dotnet --list-runtimes | grep -q '^Microsoft.NETCore.App 9\.'; then TFM=net9.0; else TFM=net8.0; fi
