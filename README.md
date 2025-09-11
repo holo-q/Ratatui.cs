@@ -4,14 +4,12 @@
 
 #  Ratatui.cs — .NET/C# Terminal UI (TUI) Library powered by Rust Ratatui
 
-![CI](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml/badge.svg)
-[![Guard](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml)
-[![Snapshots Local](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots-local.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots-local.yml)
-[![Snapshots Auto](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots-on-ci.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots-on-ci.yml)
-[![0.30 Alpha](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci-030.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci-030.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/holo-q/Ratatui.cs?logo=github)](https://github.com/holo-q/Ratatui.cs/releases)
 [![NuGet](https://img.shields.io/nuget/v/Ratatui.cs.svg?logo=nuget&label=NuGet)](https://www.nuget.org/packages/Ratatui.cs)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Ratatui.cs.svg?logo=nuget)](https://www.nuget.org/packages/Ratatui.cs)
+![CI](https://github.com/holo-q/Ratatui.cs/actions/workflows/ci.yml/badge.svg)
+[![Guard](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/guard.yml)
+[![Snapshots Auto](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots-on-ci.yml/badge.svg)](https://github.com/holo-q/Ratatui.cs/actions/workflows/snapshots-on-ci.yml)
 
 High-performance, cross-platform Terminal UI (TUI) for .NET and C#. Ratatui.cs exposes the battle-tested Rust Ratatui engine over a stable FFI with an idiomatic C# API. Build rich console apps with widgets, layout, keyboard/mouse events, batched frame rendering, and headless snapshot testing. Works on Windows, Linux, and macOS.
 
