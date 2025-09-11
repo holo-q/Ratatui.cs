@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ratatui;
 
@@ -26,8 +27,7 @@ public static class Extensions
     public static Table Header(this Table t, ReadOnlySpan<byte> utf8, Style? style = null)
     {
         var run = new Batching.SpanRun(utf8.ToArray(), style ?? default);
-        Span<Batching.SpanRun> runs = stackalloc Batching.SpanRun[1];
-        runs[0] = run;
-        return t.Headers(runs);
+        var span = MemoryMarshal.CreateReadOnlySpan(ref run, 1);
+        return t.Headers(span);
     }
 }
