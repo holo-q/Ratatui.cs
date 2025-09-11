@@ -84,6 +84,87 @@ public sealed class Chart : IDisposable
         return this;
     }
 
+    public Chart XLabels(ReadOnlySpan<ReadOnlyMemory<Batching.SpanRun>> labels)
+    {
+        EnsureNotDisposed();
+        if (labels.IsEmpty)
+        {
+            // Passing empty clears labels; FFI treats null appropriately if len==0
+            Batching.WithFfiLineSpans(labels, (lines, len) =>
+            {
+                Interop.Native.RatatuiChartSetXLabelsSpans(_handle.DangerousGetHandle(), lines, len);
+            });
+            return this;
+        }
+        Batching.WithFfiLineSpans(labels, (lines, len) =>
+        {
+            Interop.Native.RatatuiChartSetXLabelsSpans(_handle.DangerousGetHandle(), lines, len);
+        });
+        return this;
+    }
+
+    public Chart YLabels(ReadOnlySpan<ReadOnlyMemory<Batching.SpanRun>> labels)
+    {
+        EnsureNotDisposed();
+        Batching.WithFfiLineSpans(labels, (lines, len) =>
+        {
+            Interop.Native.RatatuiChartSetYLabelsSpans(_handle.DangerousGetHandle(), lines, len);
+        });
+        return this;
+    }
+
+    public Chart AxisStyles(Style xStyle, Style yStyle)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiChartSetAxisStyles(_handle.DangerousGetHandle(), xStyle.ToFfi(), yStyle.ToFfi());
+        return this;
+    }
+
+    public Chart LabelsAlignment(Alignment xAlign, Alignment yAlign)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiChartSetLabelsAlignment(_handle.DangerousGetHandle(), (uint)xAlign, (uint)yAlign);
+        return this;
+    }
+
+    public enum LegendPosition : uint
+    {
+        Right = 4,
+        Top = 1,
+        Bottom = 2,
+        Left = 3,
+        TopLeft = 5,
+        TopRight = 6,
+        BottomLeft = 7,
+        BottomRight = 8,
+    }
+
+    public Chart Legend(LegendPosition pos)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiChartSetLegendPosition(_handle.DangerousGetHandle(), (uint)pos);
+        return this;
+    }
+
+    public Chart Style(Style s)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiChartSetStyle(_handle.DangerousGetHandle(), s.ToFfi());
+        return this;
+    }
+
+    public enum HiddenConstraintKind : uint { Length = 0, Percentage = 1, Min = 2 }
+
+    public Chart HiddenLegendConstraints((HiddenConstraintKind kind, ushort value) first,
+                                         (HiddenConstraintKind kind, ushort value) second)
+    {
+        EnsureNotDisposed();
+        uint[] kinds = [(uint)first.kind, (uint)second.kind];
+        ushort[] values = [first.value, second.value];
+        Interop.Native.RatatuiChartSetHiddenLegendConstraints(_handle.DangerousGetHandle(), kinds, values);
+        return this;
+    }
+
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Chart)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }
 }

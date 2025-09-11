@@ -499,7 +499,7 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_legend_position", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiChartSetLegendPosition(IntPtr c, uint pos);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_hidden_legend_constraints", CallingConvention = CallingConvention.Cdecl)]
-    internal static extern void RatatuiChartSetHiddenLegendConstraints(IntPtr c, ushort minWidth, ushort maxWidth, ushort minHeight, ushort maxHeight);
+    internal static extern void RatatuiChartSetHiddenLegendConstraints(IntPtr c, uint[] kinds2, ushort[] values2);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_block_adv", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiChartSetBlockAdv(IntPtr c, byte bordersBits, uint borderType, ushort padL, ushort padT, ushort padR, ushort padB, IntPtr titleSpans, UIntPtr titleLen);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_block_title_alignment", CallingConvention = CallingConvention.Cdecl)]

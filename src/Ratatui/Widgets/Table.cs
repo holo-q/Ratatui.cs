@@ -32,7 +32,17 @@ public sealed class Table : IDisposable
         return this;
     }
 
-    // UTF-8 headers path can use spans in future.
+    // Headers defined as styled spans (one header cell as a single line of spans)
+    public Table Headers(ReadOnlySpan<Batching.SpanRun> runs)
+    {
+        EnsureNotDisposed();
+        if (runs.IsEmpty) return this;
+        Batching.WithFfiSpans(runs, (spans, len) =>
+        {
+            Interop.Native.RatatuiTableSetHeadersSpans(_handle.DangerousGetHandle(), spans, len);
+        });
+        return this;
+    }
 
     public Table AppendRow(params string[] cells)
     {
@@ -42,7 +52,29 @@ public sealed class Table : IDisposable
         return this;
     }
 
-    // UTF-8 row path can use spans in future.
+    // Append a row as a single line of styled spans (one cell).
+    public Table AppendRow(ReadOnlySpan<Batching.SpanRun> runs)
+    {
+        EnsureNotDisposed();
+        if (runs.IsEmpty) return this;
+        Batching.WithFfiSpans(runs, (spans, len) =>
+        {
+            Interop.Native.RatatuiTableAppendRowSpans(_handle.DangerousGetHandle(), spans, len);
+        });
+        return this;
+    }
+
+    // Append multiple rows with multi-line cells using nested spans batching.
+    public Table AppendRows(ReadOnlySpan<Batching.Row> rows)
+    {
+        EnsureNotDisposed();
+        if (rows.IsEmpty) return this;
+        Batching.WithFfiRowsCellsLines(rows, (pRows, len) =>
+        {
+            Interop.Native.RatatuiTableAppendRowsCellsLines(_handle.DangerousGetHandle(), pRows, len);
+        });
+        return this;
+    }
 
     public Table ColumnPercents(params ushort[] percents)
     {

@@ -21,7 +21,7 @@ Ergonomics (C#)
 
 - RAII terminal toggles: `Raw(true)`, `AltScreen(true)`, `ShowCursor(false)`, `Viewport` property; safe unwind on `Dispose`.
 - Uniform borders/padding/alignment: `BlockAdv` + `WithBlock(...)` extensions on widgets; zero allocations.
-- Batch‑friendly APIs: append spans/lines/rows in one call to reduce interop overhead.
+- Batch‑friendly APIs: append spans/lines/rows in one call to reduce interop overhead (see `Batching.WithFfiSpans` and wrappers like `Paragraph.AppendSpans`, `List.AppendItems`, `Tabs.SetTitlesSpans`).
 - Headless helpers: `Ratatui.Testing.Headless` methods render widgets/frames deterministically for tests.
 - See the full guide in `docs/csharp-ergonomics.md` for patterns, performance tips, and examples.
 

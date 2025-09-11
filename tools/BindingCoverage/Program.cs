@@ -57,6 +57,12 @@ static class Program
                 foreach (var e in extra) Console.Error.WriteLine("  " + e);
             }
 
+            // Optional: emit stub suggestions for new/missing exports
+            if (opts is { EmitSuggestionsPath: not null } && !string.IsNullOrEmpty(opts.EmitSuggestionsPath))
+            {
+                EmitSuggestions(opts.EmitSuggestionsPath!, missing, extra);
+            }
+
             if (missing.Count > 0 || (opts.FailOnExtra && extra.Count > 0))
                 return 3;
 
@@ -70,13 +76,14 @@ static class Program
         }
     }
 
-    private sealed record Options(string AssemblyPath, string ProjectDir, bool FailOnExtra)
+    private sealed record Options(string AssemblyPath, string ProjectDir, bool FailOnExtra, string? EmitSuggestionsPath)
     {
         public static Options Parse(string[] args)
         {
             string? asm = null;
             string? proj = null;
             bool failExtra = true;
+            string? emit = null;
             for (int i = 0; i < args.Length; i++)
             {
                 switch (args[i])
@@ -84,13 +91,14 @@ static class Program
                     case "--assembly": asm = args[++i]; break;
                     case "--project-dir": proj = args[++i]; break;
                     case "--allow-extra": failExtra = false; break;
+                    case "--emit-suggestions": emit = args[++i]; break;
                 }
             }
             if (string.IsNullOrEmpty(asm) || !File.Exists(asm))
                 throw new ArgumentException("--assembly path to built Ratatui.dll is required");
             if (string.IsNullOrEmpty(proj) || !Directory.Exists(proj))
                 throw new ArgumentException("--project-dir directory is required");
-            return new Options(Path.GetFullPath(asm!), Path.GetFullPath(proj!), failExtra);
+            return new Options(Path.GetFullPath(asm!), Path.GetFullPath(proj!), failExtra, emit);
         }
     }
 
@@ -103,6 +111,43 @@ static class Program
                 return dir.FullName;
         }
         return null;
+    }
+
+    private static void EmitSuggestions(string path, List<string> missing, List<string> extra)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            using var sw = new StreamWriter(path, false, new UTF8Encoding(false));
+            sw.WriteLine("// AUTO-GENERATED: FFI binding suggestions (no-op if coverage is 100%)");
+            sw.WriteLine("// Missing exports (present in FFI, absent in C#):");
+            foreach (var m in missing) sw.WriteLine("//   " + m);
+            sw.WriteLine("// Extra/stale bindings (present in C#, absent in FFI):");
+            foreach (var e in extra) sw.WriteLine("//   " + e);
+            sw.WriteLine();
+            if (missing.Count > 0)
+            {
+                sw.WriteLine("// Templates for missing [DllImport]s (adjust signatures):");
+                sw.WriteLine("// using System; using System.Runtime.InteropServices;");
+                sw.WriteLine("// internal static partial class Native { /* add to Native.cs */ ");
+                foreach (var m in missing)
+                {
+                    sw.WriteLine($"// [DllImport(\\\"ratatui_ffi\\\", EntryPoint=\\\"{m}\\\", CallingConvention=CallingConvention.Cdecl)]");
+                    sw.WriteLine($"// internal static extern void {ToPascal(m)}(IntPtr a, UIntPtr b);");
+                }
+                sw.WriteLine("// }");
+            }
+        }
+        catch { /* best effort */ }
+    }
+
+    private static string ToPascal(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+        var parts = name.Split('_');
+        var sb = new StringBuilder(parts.Length * 8);
+        foreach (var p in parts) if (p.Length>0) sb.Append(char.ToUpperInvariant(p[0])).Append(p.AsSpan(1));
+        return sb.ToString();
     }
 
     private static HashSet<string> ExtractFfiExportsFromRust(string ffiSrcDir)

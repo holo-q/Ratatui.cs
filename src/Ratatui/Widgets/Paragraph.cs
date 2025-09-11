@@ -45,7 +45,33 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
-    // Span-based overload can be reintroduced via AppendSpans.
+    // Batch append styled UTF-8 spans without allocations beyond the batch buffer.
+    public Paragraph AppendSpans(ReadOnlySpan<Batching.SpanRun> runs)
+    {
+        EnsureNotDisposed();
+        if (runs.IsEmpty) return this;
+        Batching.WithFfiSpans(runs, (spans, len) =>
+        {
+            Interop.Native.RatatuiParagraphAppendSpans(_handle.DangerousGetHandle(), spans, len);
+        });
+        return this;
+    }
+
+    public Paragraph AppendLineSpans(ReadOnlySpan<Batching.SpanRun> runs)
+    {
+        EnsureNotDisposed();
+        if (runs.IsEmpty)
+        {
+            // Force a line break if no content specified
+            Interop.Native.RatatuiParagraphLineBreak(_handle.DangerousGetHandle());
+            return this;
+        }
+        Batching.WithFfiSpans(runs, (spans, len) =>
+        {
+            Interop.Native.RatatuiParagraphAppendLineSpans(_handle.DangerousGetHandle(), spans, len);
+        });
+        return this;
+    }
 
     public Paragraph NewLine()
     {

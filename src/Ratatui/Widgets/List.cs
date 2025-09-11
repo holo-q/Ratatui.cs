@@ -31,7 +31,17 @@ public sealed class List : IDisposable
         return this;
     }
 
-    // For a zero-alloc UTF-8 path, prefer batched spans APIs in future.
+    // Append a single list item composed of styled spans (UTF-8), allocation-light.
+    public List AppendItem(ReadOnlySpan<Batching.SpanRun> runs)
+    {
+        EnsureNotDisposed();
+        if (runs.IsEmpty) return this;
+        Batching.WithFfiSpans(runs, (spans, len) =>
+        {
+            Interop.Native.RatatuiListAppendItemSpans(_handle.DangerousGetHandle(), spans, len);
+        });
+        return this;
+    }
 
     public List Selected(int index)
     {
@@ -51,6 +61,18 @@ public sealed class List : IDisposable
     {
         EnsureNotDisposed();
         Interop.Native.RatatuiListSetHighlightSymbol(_handle.DangerousGetHandle(), symbol);
+        return this;
+    }
+
+    // Append multiple list items where each item is a line of styled spans.
+    public List AppendItems(ReadOnlySpan<ReadOnlyMemory<Batching.SpanRun>> items)
+    {
+        EnsureNotDisposed();
+        if (items.IsEmpty) return this;
+        Batching.WithFfiLineSpans(items, (lines, len) =>
+        {
+            Interop.Native.RatatuiListAppendItemsSpans(_handle.DangerousGetHandle(), lines, len);
+        });
         return this;
     }
 

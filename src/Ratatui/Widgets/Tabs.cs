@@ -23,7 +23,29 @@ public sealed class Tabs : IDisposable
         return this;
     }
 
-    // UTF-8 titles path can use spans in future.
+    // Set a single title (tab) using styled UTF-8 spans.
+    public Tabs AddTitleSpans(ReadOnlySpan<Batching.SpanRun> runs)
+    {
+        EnsureNotDisposed();
+        if (runs.IsEmpty) return this;
+        Batching.WithFfiSpans(runs, (spans, len) =>
+        {
+            Interop.Native.RatatuiTabsAddTitleSpans(_handle.DangerousGetHandle(), spans, len);
+        });
+        return this;
+    }
+
+    // Replace all tab titles using lines of styled spans (one line per tab title).
+    public Tabs SetTitlesSpans(ReadOnlySpan<ReadOnlyMemory<Batching.SpanRun>> titles)
+    {
+        EnsureNotDisposed();
+        if (titles.IsEmpty) { Interop.Native.RatatuiTabsClearTitles(_handle.DangerousGetHandle()); return this; }
+        Batching.WithFfiLineSpans(titles, (lines, len) =>
+        {
+            Interop.Native.RatatuiTabsSetTitlesSpans(_handle.DangerousGetHandle(), lines, len);
+        });
+        return this;
+    }
 
     public Tabs Selected(int index)
     {
@@ -39,7 +61,7 @@ public sealed class Tabs : IDisposable
         return this;
     }
 
-    // UTF-8 title path can use spans in future.
+    // UTF-8 title path can use spans: use AddTitleSpans/SetTitlesSpans.
 
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Tabs)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }

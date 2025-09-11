@@ -216,6 +216,30 @@ public sealed class Terminal : IDisposable
     public void Draw(Chart chart, Vec2i pos, Vec2i size)
         => Draw(chart, Rect.From(pos, size));
 
+    public void Draw(LineGauge g, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (g is null) throw new ArgumentNullException(nameof(g));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawLineGaugeIn(_handle.DangerousGetHandle(), g.DangerousHandle, r);
+        if (!ok) throw new InvalidOperationException("DrawLineGauge failed");
+    }
+
+    public void Draw(LineGauge g, Vec2i pos, Vec2i size)
+        => Draw(g, Rect.From(pos, size));
+
+    public void Draw(Canvas c, Rect rect)
+    {
+        EnsureNotDisposed();
+        if (c is null) throw new ArgumentNullException(nameof(c));
+        var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
+        var ok = Interop.Native.RatatuiTerminalDrawCanvasIn(_handle.DangerousGetHandle(), c.DangerousHandle, r);
+        if (!ok) throw new InvalidOperationException("DrawCanvas failed");
+    }
+
+    public void Draw(Canvas c, Vec2i pos, Vec2i size)
+        => Draw(c, Rect.From(pos, size));
+
     public bool NextEvent(TimeSpan timeout, out Event ev)
     {
         EnsureNotDisposed();
