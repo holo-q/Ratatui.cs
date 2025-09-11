@@ -123,6 +123,16 @@ Links
 - FFI (Rust): https://github.com/holo-q/ratatui-ffi
 - Ratatui (upstream): https://github.com/ratatui-org/ratatui
 
+Documentation
+
+- Docs hub: ../../docs/README.md
+- Ergonomics guide: ../../docs/csharp-ergonomics.md
+- Batching and spans: ../../docs/batching-and-spans.md
+- Headless testing: ../../docs/headless-testing.md
+- Terminal RAII + App: ../../docs/terminal-and-app.md
+- Widgets quick guide: ../../docs/widgets.md
+- FFI coverage + stub generation: ../../docs/ffi-coverage-and-stubs.md
+
 C# Idioms & Performance
 
 - Prefer Span/ReadOnlySpan overloads where available to avoid allocations. Most append/set APIs have `ReadOnlySpan<byte>` UTF‑8 variants.
