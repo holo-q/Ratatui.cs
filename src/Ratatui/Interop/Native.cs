@@ -139,6 +139,8 @@ internal static partial class Native
 
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphSetBlockTitle(IntPtr para, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiParagraphSetBlockTitleSpans(IntPtr para, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_paragraph_set_alignment", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiParagraphSetAlignment(IntPtr para, uint align);
@@ -397,6 +399,8 @@ internal static partial class Native
     internal static extern void RatatuiGaugeSetBlockTitle(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiGaugeSetBlockTitleSpans(IntPtr g, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetBlockTitleSpans(IntPtr g, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // LineGauge
     [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_new", CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr RatatuiLineGaugeNew();
@@ -414,6 +418,8 @@ internal static partial class Native
     internal static extern void RatatuiLineGaugeSetBlockAdv(IntPtr g, byte bordersBits, uint borderType, ushort padL, ushort padT, ushort padR, ushort padB, IntPtr titleSpans, UIntPtr titleLen);
     [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiLineGaugeSetBlockTitle(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiLineGaugeSetBlockTitleSpans(IntPtr g, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_set_block_title_alignment", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiLineGaugeSetBlockTitleAlignment(IntPtr g, uint align);
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_linegauge_in", CallingConvention = CallingConvention.Cdecl)]
@@ -453,6 +459,8 @@ internal static partial class Native
     internal static extern void RatatuiCanvasSetBackgroundColor(IntPtr c, uint color);
     [DllImport(LibraryName, EntryPoint = "ratatui_canvas_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiCanvasSetBlockTitle(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_canvas_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiCanvasSetBlockTitleSpans(IntPtr c, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_canvas_set_block_adv", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiCanvasSetBlockAdv(IntPtr c, byte bordersBits, uint borderType, ushort padL, ushort padT, ushort padR, ushort padB, IntPtr titleSpans, UIntPtr titleLen);
     [DllImport(LibraryName, EntryPoint = "ratatui_canvas_set_block_title_alignment", CallingConvention = CallingConvention.Cdecl)]
@@ -540,6 +548,8 @@ internal static partial class Native
 
     [DllImport(LibraryName, EntryPoint = "ratatui_list_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiListSetBlockTitle(IntPtr lst, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_list_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiListSetBlockTitleSpans(IntPtr lst, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_list_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -572,6 +582,8 @@ internal static partial class Native
 
     [DllImport(LibraryName, EntryPoint = "ratatui_table_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableSetBlockTitle(IntPtr tbl, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_table_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTableSetBlockTitleSpans(IntPtr tbl, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_table_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableSetBlockTitleSpans(IntPtr tbl, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
 
@@ -656,6 +668,8 @@ internal static partial class Native
     internal static extern void RatatuiTabsSetSelected(IntPtr t, ushort selected);
     [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTabsSetBlockTitle(IntPtr t, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTabsSetBlockTitleSpans(IntPtr t, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // removed: tabs_set_block_title_bytes (use spans/adv APIs)
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_tabs_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -679,6 +693,8 @@ internal static partial class Native
     internal static extern void RatatuiBarChartSetBlockTitle(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiBarChartSetBlockTitleSpans(IntPtr b, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartSetBlockTitleSpans(IntPtr b, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // removed: barchart bytes variants
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_barchart_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -696,6 +712,8 @@ internal static partial class Native
     internal static extern void RatatuiSparklineSetValues(IntPtr s, ulong[] values, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiSparklineSetBlockTitle(IntPtr s, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiSparklineSetBlockTitleSpans(IntPtr s, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // removed: sparkline bytes variant
     [DllImport(LibraryName, EntryPoint = "ratatui_sparkline_set_block_adv", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiSparklineSetBlockAdv(IntPtr s, byte bordersBits, uint borderType, ushort padL, ushort padT, ushort padR, ushort padB, IntPtr titleSpans, UIntPtr titleLen);
@@ -722,6 +740,8 @@ internal static partial class Native
     internal static extern void RatatuiScrollbarConfigure(IntPtr s, uint orient, ushort position, ushort contentLen, ushort viewportLen);
     [DllImport(LibraryName, EntryPoint = "ratatui_scrollbar_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiScrollbarSetBlockTitle(IntPtr s, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_scrollbar_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiScrollbarSetBlockTitleSpans(IntPtr s, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // removed: scrollbar bytes variant
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_scrollbar_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -742,6 +762,8 @@ internal static partial class Native
     // removed: chart_set_axes_bounds (use chart_set_bounds)
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiChartSetBlockTitle(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiChartSetBlockTitleSpans(IntPtr c, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // removed: chart bytes variant
 
     // removed: tabs titles bytes variant
