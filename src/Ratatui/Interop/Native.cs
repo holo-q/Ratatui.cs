@@ -218,18 +218,18 @@ internal static class Native
     // ===== Headless Frame =====
     [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_frame", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
-    internal static extern bool RatatuiHeadlessRenderFrame(ushort width, ushort height, IntPtr cmds, UIntPtr len, out IntPtr utf8Text);
+    internal static extern bool RatatuiHeadlessRenderFrame(ushort width, ushort height, [In] FfiDrawCmd[] commands, UIntPtr len, out IntPtr utf8Text);
     [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_frame_styles", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
-    internal static extern bool RatatuiHeadlessRenderFrameStyles(ushort width, ushort height, IntPtr cmds, UIntPtr len, out IntPtr utf8Text);
+    internal static extern bool RatatuiHeadlessRenderFrameStyles(ushort width, ushort height, [In] FfiDrawCmd[] commands, UIntPtr len, out IntPtr utf8Text);
     [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_frame_styles_ex", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
-    internal static extern bool RatatuiHeadlessRenderFrameStylesEx(ushort width, ushort height, IntPtr cmds, UIntPtr len, out IntPtr utf8Text);
+    internal static extern bool RatatuiHeadlessRenderFrameStylesEx(ushort width, ushort height, [In] FfiDrawCmd[] commands, UIntPtr len, out IntPtr utf8Text);
     [StructLayout(LayoutKind.Sequential)]
     internal struct FfiCellInfo { public uint Ch, Fg, Bg; public ushort Mods; }
     [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_frame_cells", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
-    internal static extern bool RatatuiHeadlessRenderFrameCells(ushort width, ushort height, IntPtr cmds, UIntPtr len, IntPtr outCells, UIntPtr cap);
+    internal static extern bool RatatuiHeadlessRenderFrameCells(ushort width, ushort height, [In] FfiDrawCmd[] commands, UIntPtr len, IntPtr outCells, UIntPtr cap);
     // ratatui_string_free already declared earlier in file
 
     // ===== Terminal toggles / cursor / viewport =====
@@ -585,10 +585,6 @@ internal static class Native
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct FfiDrawCmd { public uint Kind; public IntPtr Handle; public FfiRect Rect; }
-
-    [DllImport(LibraryName, EntryPoint = "ratatui_headless_render_frame", CallingConvention = CallingConvention.Cdecl)]
-    [return: MarshalAs(UnmanagedType.I1)]
-    internal static extern bool RatatuiHeadlessRenderFrame(ushort width, ushort height, [In] FfiDrawCmd[] commands, UIntPtr len, out IntPtr utf8Text);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_frame", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]

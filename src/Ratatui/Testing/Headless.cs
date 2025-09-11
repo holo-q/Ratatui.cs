@@ -100,4 +100,58 @@ public static class Headless
         try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
         finally { Interop.Native.RatatuiStringFree(ptr); }
     }
+
+    public static string RenderFrameStyles(int width, int height, params DrawCommand[] commands)
+    {
+        var ffi = DrawCommand.ToFfi(commands);
+        var ok = Interop.Native.RatatuiHeadlessRenderFrameStyles((ushort)width, (ushort)height, ffi, (UIntPtr)ffi.Length, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless frame styles render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
+
+    public static string RenderFrameStylesEx(int width, int height, params DrawCommand[] commands)
+    {
+        var ffi = DrawCommand.ToFfi(commands);
+        var ok = Interop.Native.RatatuiHeadlessRenderFrameStylesEx((ushort)width, (ushort)height, ffi, (UIntPtr)ffi.Length, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless frame styles_ex render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
+
+    public readonly struct CellInfo
+    {
+        public readonly uint Ch;
+        public readonly uint Fg;
+        public readonly uint Bg;
+        public readonly ushort Mods;
+        public CellInfo(uint ch, uint fg, uint bg, ushort mods) { Ch = ch; Fg = fg; Bg = bg; Mods = mods; }
+    }
+
+    public static unsafe CellInfo[] RenderFrameCells(int width, int height, params DrawCommand[] commands)
+    {
+        if (width <= 0 || height <= 0) return Array.Empty<CellInfo>();
+        var ffi = DrawCommand.ToFfi(commands);
+        var cap = checked(width * height);
+        var cells = new Interop.Native.FfiCellInfo[cap];
+        fixed (Interop.Native.FfiCellInfo* p = cells)
+        {
+            var ok = Interop.Native.RatatuiHeadlessRenderFrameCells((ushort)width, (ushort)height, ffi, (UIntPtr)ffi.Length, (IntPtr)p, (UIntPtr)cap);
+            if (!ok) throw new InvalidOperationException("Headless frame cells render failed");
+        }
+        var outArr = new CellInfo[cap];
+        for (int i = 0; i < cap; i++)
+        {
+            outArr[i] = new CellInfo(cells[i].Ch, cells[i].Fg, cells[i].Bg, cells[i].Mods);
+        }
+        return outArr;
+    }
+
+    public static string RenderClear(int width, int height)
+    {
+        var ok = Interop.Native.RatatuiHeadlessRenderClear((ushort)width, (ushort)height, out var ptr);
+        if (!ok || ptr == IntPtr.Zero) throw new InvalidOperationException("Headless clear render failed");
+        try { return Marshal.PtrToStringUTF8(ptr) ?? string.Empty; }
+        finally { Interop.Native.RatatuiStringFree(ptr); }
+    }
 }
