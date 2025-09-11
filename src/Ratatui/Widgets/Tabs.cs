@@ -63,6 +63,27 @@ public sealed class Tabs : IDisposable
 
     // UTF-8 title path can use spans: use AddTitleSpans/SetTitlesSpans.
 
+    public Tabs Divider(string divider)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTabsSetDivider(_handle.DangerousGetHandle(), divider);
+        return this;
+    }
+
+    public Tabs Styles(Style unselected, Style selected, Style divider)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTabsSetStyles(_handle.DangerousGetHandle(), unselected.ToFfi(), selected.ToFfi(), divider.ToFfi());
+        return this;
+    }
+
+    public Tabs TitleAlignment(Alignment align)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTabsSetBlockTitleAlignment(_handle.DangerousGetHandle(), (uint)align);
+        return this;
+    }
+
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Tabs)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }
 }

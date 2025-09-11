@@ -84,6 +84,53 @@ public sealed class Chart : IDisposable
         return this;
     }
 
+    public enum DatasetKind : uint { Line = 0, Bar = 1, Scatter = 2 }
+
+    public Chart Dataset(string name, IReadOnlyList<(double x, double y)> points, Style? style = null, DatasetKind kind = DatasetKind.Line)
+    {
+        EnsureNotDisposed();
+        if (points == null || points.Count == 0) return this;
+        var count = points.Count;
+        double[] flat = System.Buffers.ArrayPool<double>.Shared.Rent(count * 2);
+        try
+        {
+            for (int i = 0; i < count; i++) { flat[i*2] = points[i].x; flat[i*2+1] = points[i].y; }
+            Interop.Native.RatatuiChartAddDatasetWithType(_handle.DangerousGetHandle(), name, flat, (UIntPtr)count, (style ?? default).ToFfi(), (uint)kind);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<double>.Shared.Return(flat);
+        }
+        return this;
+    }
+
+    public Chart Dataset(string name, ReadOnlySpan<(double x, double y)> points, Style? style = null, DatasetKind kind = DatasetKind.Line)
+    {
+        EnsureNotDisposed();
+        if (points.IsEmpty) return this;
+        var count = points.Length;
+        if (count * 2 <= 256)
+        {
+            Span<double> flat = stackalloc double[count * 2];
+            for (int i = 0; i < count; i++) { flat[i*2] = points[i].x; flat[i*2+1] = points[i].y; }
+            Interop.Native.RatatuiChartAddDatasetWithType(_handle.DangerousGetHandle(), name, flat.ToArray(), (UIntPtr)count, (style ?? default).ToFfi(), (uint)kind);
+        }
+        else
+        {
+            double[] array = System.Buffers.ArrayPool<double>.Shared.Rent(count * 2);
+            try
+            {
+                for (int i = 0; i < count; i++) { array[i*2] = points[i].x; array[i*2+1] = points[i].y; }
+                Interop.Native.RatatuiChartAddDatasetWithType(_handle.DangerousGetHandle(), name, array, (UIntPtr)count, (style ?? default).ToFfi(), (uint)kind);
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<double>.Shared.Return(array);
+            }
+        }
+        return this;
+    }
+
     public Chart XLabels(ReadOnlySpan<ReadOnlyMemory<Batching.SpanRun>> labels)
     {
         EnsureNotDisposed();

@@ -483,7 +483,7 @@ internal static class Native
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_add_datasets", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiChartAddDatasets(IntPtr c, double[] pointsXY, UIntPtr lenPairs, FfiStyle style);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_add_dataset_with_type", CallingConvention = CallingConvention.Cdecl)]
-    internal static extern void RatatuiChartAddDatasetWithType(IntPtr c, double[] pointsXY, UIntPtr lenPairs, FfiStyle style, uint dtype);
+    internal static extern void RatatuiChartAddDatasetWithType(IntPtr c, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, double[] pointsXY, UIntPtr lenPairs, FfiStyle style, uint dtype);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_x_labels_spans", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiChartSetXLabelsSpans(IntPtr c, IntPtr spans, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_chart_set_y_labels_spans", CallingConvention = CallingConvention.Cdecl)]
