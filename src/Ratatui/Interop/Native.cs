@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Ratatui.Interop;
 
-internal static class Native
+internal static partial class Native
 {
     private const string LibraryName = "ratatui_ffi";
 
