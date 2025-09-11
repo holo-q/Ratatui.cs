@@ -24,10 +24,20 @@ public sealed class Table : IDisposable
         return this;
     }
 
-    public Table Title(ReadOnlySpan<byte> utf8, bool border = true)
+    public unsafe Table Title(ReadOnlySpan<byte> utf8, bool border = true)
     {
         EnsureNotDisposed();
-        Interop.Native.RatatuiTableSetBlockTitle(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8), border);
+        if (utf8.IsEmpty)
+        {
+            Interop.Native.RatatuiTableSetBlockTitle(_handle.DangerousGetHandle(), null, border);
+            return this;
+        }
+        var buf = stackalloc byte[utf8.Length + 1];
+        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+        buf[utf8.Length] = 0;
+        var spans = stackalloc Interop.Native.FfiSpan[1];
+        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
+        Interop.Native.RatatuiTableSetBlockTitleSpans(_handle.DangerousGetHandle(), (IntPtr)spans, (UIntPtr)1, border);
         return this;
     }
 

@@ -29,10 +29,20 @@ public sealed class LineGauge : IDisposable
         return this;
     }
 
-    public LineGauge Label(ReadOnlySpan<byte> utf8)
+    public unsafe LineGauge Label(ReadOnlySpan<byte> utf8)
     {
         EnsureNotDisposed();
-        Interop.Native.RatatuiLineGaugeSetLabel(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8));
+        if (utf8.IsEmpty)
+        {
+            Interop.Native.RatatuiLineGaugeSetLabel(_handle.DangerousGetHandle(), null);
+            return this;
+        }
+        var buf = stackalloc byte[utf8.Length + 1];
+        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+        buf[utf8.Length] = 0;
+        var spans = stackalloc Interop.Native.FfiSpan[1];
+        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
+        Interop.Native.RatatuiLineGaugeSetLabelSpans(_handle.DangerousGetHandle(), (IntPtr)spans, (UIntPtr)1);
         return this;
     }
 

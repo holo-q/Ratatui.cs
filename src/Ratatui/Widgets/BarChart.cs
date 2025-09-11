@@ -50,10 +50,37 @@ public sealed class BarChart : IDisposable
     }
 
     // UTF-8 TSV labels (allocates a string due to FFI signature)
-    public BarChart Labels(ReadOnlySpan<byte> tsvUtf8)
+    public unsafe BarChart Labels(ReadOnlySpan<byte> tsvUtf8)
     {
         EnsureNotDisposed();
-        Interop.Native.RatatuiBarChartSetLabels(_handle.DangerousGetHandle(), tsvUtf8.IsEmpty ? string.Empty : System.Text.Encoding.UTF8.GetString(tsvUtf8));
+        if (tsvUtf8.IsEmpty)
+        {
+            Interop.Native.RatatuiBarChartSetLabels(_handle.DangerousGetHandle(), string.Empty);
+            return this;
+        }
+        // Interpret TSV as multiple labels; build single-line spans per label (no styles).
+        int count = 1; for (int i = 0; i < tsvUtf8.Length; i++) if (tsvUtf8[i] == (byte) '\t') count++;
+        Span<Interop.Native.FfiSpan> spanBuf = count <= 64 ? stackalloc Interop.Native.FfiSpan[count] : new Interop.Native.FfiSpan[count];
+        Span<Interop.Native.FfiLineSpans> lines = count <= 64 ? stackalloc Interop.Native.FfiLineSpans[count] : new Interop.Native.FfiLineSpans[count];
+        // Make a NUL-terminated copy per label slice inside one temporary buffer? Simpler: allocate per label pointer into separate small stackallocs.
+        // For simplicity and zero heap allocs, we duplicate into small per-label stacks in a loop.
+        int start = 0, idx = 0;
+        for (int i = 0; i <= tsvUtf8.Length; i++)
+        {
+            bool end = (i == tsvUtf8.Length) || (tsvUtf8[i] == (byte) '\t');
+            if (!end) continue;
+            int len = i - start;
+            var buf = stackalloc byte[len + 1];
+            if (len > 0) tsvUtf8.Slice(start, len).CopyTo(new Span<byte>(buf, len));
+            buf[len] = 0;
+            spanBuf[idx] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
+            lines[idx] = new Interop.Native.FfiLineSpans { Spans = (IntPtr)(&spanBuf[idx]), Len = (UIntPtr)1 };
+            idx++; start = i + 1;
+        }
+        fixed (Interop.Native.FfiLineSpans* pLines = lines)
+        {
+            Interop.Native.RatatuiBarChartSetLabelsSpans(_handle.DangerousGetHandle(), (IntPtr)pLines, (UIntPtr)idx);
+        }
         return this;
     }
 
@@ -64,10 +91,20 @@ public sealed class BarChart : IDisposable
         return this;
     }
 
-    public BarChart Title(ReadOnlySpan<byte> utf8, bool border = true)
+    public unsafe BarChart Title(ReadOnlySpan<byte> utf8, bool border = true)
     {
         EnsureNotDisposed();
-        Interop.Native.RatatuiBarChartSetBlockTitle(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8), border);
+        if (utf8.IsEmpty)
+        {
+            Interop.Native.RatatuiBarChartSetBlockTitle(_handle.DangerousGetHandle(), null, border);
+            return this;
+        }
+        var buf = stackalloc byte[utf8.Length + 1];
+        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+        buf[utf8.Length] = 0;
+        var spans = stackalloc Interop.Native.FfiSpan[1];
+        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
+        Interop.Native.RatatuiBarChartSetBlockTitleSpans(_handle.DangerousGetHandle(), (IntPtr)spans, (UIntPtr)1, border);
         return this;
     }
 

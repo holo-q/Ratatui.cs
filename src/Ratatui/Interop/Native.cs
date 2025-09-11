@@ -373,6 +373,8 @@ internal static partial class Native
     internal static extern void RatatuiTabsSetTitlesSpans(IntPtr t, IntPtr spans, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_divider", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTabsSetDivider(IntPtr t, [MarshalAs(UnmanagedType.LPUTF8Str)] string dividerUtf8);
+    [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_divider_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTabsSetDividerSpans(IntPtr t, IntPtr spans, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_styles", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTabsSetStyles(IntPtr t, FfiStyle normal, FfiStyle selected, FfiStyle divider);
     [DllImport(LibraryName, EntryPoint = "ratatui_tabs_set_block_adv", CallingConvention = CallingConvention.Cdecl)]
@@ -387,6 +389,14 @@ internal static partial class Native
     internal static extern void RatatuiGaugeSetBlockAdv(IntPtr g, byte bordersBits, uint borderType, ushort padL, ushort padT, ushort padR, ushort padB, IntPtr titleSpans, UIntPtr titleLen);
     [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title_alignment", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiGaugeSetBlockTitleAlignment(IntPtr g, uint align);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_label", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetLabel(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? label);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_label_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetLabelSpans(IntPtr g, IntPtr spans, UIntPtr len);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetBlockTitle(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiGaugeSetBlockTitleSpans(IntPtr g, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // LineGauge
     [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_new", CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr RatatuiLineGaugeNew();
@@ -396,6 +406,8 @@ internal static partial class Native
     internal static extern void RatatuiLineGaugeSetRatio(IntPtr g, float ratio);
     [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_set_label", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiLineGaugeSetLabel(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? label);
+    [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_set_label_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiLineGaugeSetLabelSpans(IntPtr g, IntPtr spans, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_set_style", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiLineGaugeSetStyle(IntPtr g, FfiStyle style);
     [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_set_block_adv", CallingConvention = CallingConvention.Cdecl)]
@@ -560,6 +572,8 @@ internal static partial class Native
 
     [DllImport(LibraryName, EntryPoint = "ratatui_table_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableSetBlockTitle(IntPtr tbl, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_table_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiTableSetBlockTitleSpans(IntPtr tbl, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_table_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -659,8 +673,12 @@ internal static partial class Native
     internal static extern void RatatuiBarChartSetValues(IntPtr b, ulong[] values, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_labels", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiBarChartSetLabels(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string tsv);
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_labels_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartSetLabelsSpans(IntPtr b, IntPtr lines, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiBarChartSetBlockTitle(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void RatatuiBarChartSetBlockTitleSpans(IntPtr b, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // removed: barchart bytes variants
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_barchart_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]

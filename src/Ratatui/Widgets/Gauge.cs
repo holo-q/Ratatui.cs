@@ -29,11 +29,20 @@ public sealed class Gauge : IDisposable
         return this;
     }
 
-    public Gauge Label(ReadOnlySpan<byte> utf8)
+    public unsafe Gauge Label(ReadOnlySpan<byte> utf8)
     {
         EnsureNotDisposed();
-        // FFI expects LPUTF8Str; create a transient string as there is no spans variant.
-        Interop.Native.RatatuiGaugeSetLabel(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8));
+        if (utf8.IsEmpty)
+        {
+            Interop.Native.RatatuiGaugeSetLabel(_handle.DangerousGetHandle(), null);
+            return this;
+        }
+        var buf = stackalloc byte[utf8.Length + 1];
+        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+        buf[utf8.Length] = 0;
+        var spans = stackalloc Interop.Native.FfiSpan[1];
+        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
+        Interop.Native.RatatuiGaugeSetLabelSpans(_handle.DangerousGetHandle(), (IntPtr)spans, (UIntPtr)1);
         return this;
     }
 
@@ -46,10 +55,20 @@ public sealed class Gauge : IDisposable
         return this;
     }
 
-    public Gauge Title(ReadOnlySpan<byte> utf8, bool border = true)
+    public unsafe Gauge Title(ReadOnlySpan<byte> utf8, bool border = true)
     {
         EnsureNotDisposed();
-        Interop.Native.RatatuiGaugeSetBlockTitle(_handle.DangerousGetHandle(), utf8.IsEmpty ? null : System.Text.Encoding.UTF8.GetString(utf8), border);
+        if (utf8.IsEmpty)
+        {
+            Interop.Native.RatatuiGaugeSetBlockTitle(_handle.DangerousGetHandle(), null, border);
+            return this;
+        }
+        var buf = stackalloc byte[utf8.Length + 1];
+        utf8.CopyTo(new Span<byte>(buf, utf8.Length));
+        buf[utf8.Length] = 0;
+        var spans = stackalloc Interop.Native.FfiSpan[1];
+        spans[0] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
+        Interop.Native.RatatuiGaugeSetBlockTitleSpans(_handle.DangerousGetHandle(), (IntPtr)spans, (UIntPtr)1, border);
         return this;
     }
 
