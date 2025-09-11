@@ -31,26 +31,26 @@ jobs:
           submodules: recursive
       - name: Switch FFI to 0.30 branch
         run: |
-          git -C native/ratatui_ffi fetch --all
-          git -C native/ratatui_ffi checkout ratatui-0.30
+          git -C native/ratatui-ffi fetch --all
+          git -C native/ratatui-ffi checkout ratatui-0.30
       - uses: dtolnay/rust-toolchain@stable
       - name: Build native (targeted)
         if: ${{ matrix.target != '' }}
-        working-directory: native/ratatui_ffi
+        working-directory: native/ratatui-ffi
         run: |
           rustup target add ${{ matrix.target }}
           cargo build --release --target ${{ matrix.target }}
       - name: Build native (default)
         if: ${{ matrix.target == '' }}
-        working-directory: native/ratatui_ffi
+        working-directory: native/ratatui-ffi
         run: cargo build --release
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.rid }}
           path: |
-            native/ratatui_ffi/target/release/${{ matrix.libname }}
-            native/ratatui_ffi/target/${{ matrix.target }}/release/${{ matrix.libname }}
+            native/ratatui-ffi/target/release/${{ matrix.libname }}
+            native/ratatui-ffi/target/${{ matrix.target }}/release/${{ matrix.libname }}
           if-no-files-found: warn
 
   pack:
@@ -62,7 +62,7 @@ jobs:
         with:
           submodules: recursive
       - name: Switch FFI to 0.30 branch
-        run: git -C native/ratatui_ffi checkout ratatui-0.30
+        run: git -C native/ratatui-ffi checkout ratatui-0.30
       - name: Download native artifacts
         uses: actions/download-artifact@v4
         with:

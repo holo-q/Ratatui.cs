@@ -17,7 +17,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Build native linux-x64
         run: |
-          cd native/ratatui_ffi
+          cd native/ratatui-ffi
           cargo build --release
       - uses: actions/setup-dotnet@v4
         with:
@@ -25,7 +25,7 @@ jobs:
       - name: Place native lib for sample
         run: |
           mkdir -p examples/Snapshots/runtimes/linux-x64/native
-          cp native/ratatui_ffi/target/release/libratatui_ffi.so examples/Snapshots/runtimes/linux-x64/native/
+          cp native/ratatui-ffi/target/release/libratatui_ffi.so examples/Snapshots/runtimes/linux-x64/native/
       - name: Discover framework and run snapshots
         shell: bash
         run: |

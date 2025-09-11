@@ -1,9 +1,6 @@
 [submodule "ratatui"]
 	path = ratatui
 	url = https://github.com/ratatui-org/ratatui.git
-[submodule "native/ratatui_ffi"]
-	path = native/ratatui_ffi
-	url = https://github.com/holo-q/ratatui-ffi.git
 [submodule "native/ratatui-ffi"]
 	path = native/ratatui-ffi
 	url = https://github.com/holo-q/ratatui-ffi

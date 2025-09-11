@@ -81,7 +81,7 @@ jobs:
           arch: amd64_arm64
       - name: Build native (musl via zig)
         if: ${{ runner.os == 'Linux' && matrix.zigbuild == true }}
-        working-directory: native/ratatui_ffi
+        working-directory: native/ratatui-ffi
         shell: bash
         env:
           RUSTFLAGS: -C target-feature=-crt-static
@@ -90,20 +90,20 @@ jobs:
 
       - name: Build native (targeted)
         if: ${{ (matrix.target != '') && !(runner.os == 'Linux' && matrix.zigbuild == true) }}
-        working-directory: native/ratatui_ffi
+        working-directory: native/ratatui-ffi
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Build native (default)
         if: ${{ (matrix.target == '') && !(runner.os == 'Linux' && matrix.zigbuild == true) }}
-        working-directory: native/ratatui_ffi
+        working-directory: native/ratatui-ffi
         run: cargo build --release
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.rid }}
           path: |
-            native/ratatui_ffi/target/release/${{ matrix.libname }}
-            native/ratatui_ffi/target/${{ matrix.target }}/release/${{ matrix.libname }}
+            native/ratatui-ffi/target/release/${{ matrix.libname }}
+            native/ratatui-ffi/target/${{ matrix.target }}/release/${{ matrix.libname }}
           if-no-files-found: warn
 
   native-optional:
@@ -121,7 +121,7 @@ jobs:
       - name: Install cargo-zigbuild
         run: cargo install cargo-zigbuild --locked
       - name: Build linux-musl-arm64
-        working-directory: native/ratatui_ffi
+        working-directory: native/ratatui-ffi
         env:
           RUSTFLAGS: -C target-feature=-crt-static
         run: |
@@ -131,7 +131,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: native-linux-musl-arm64
-          path: native/ratatui_ffi/target/aarch64-unknown-linux-musl/release/libratatui_ffi.so
+          path: native/ratatui-ffi/target/aarch64-unknown-linux-musl/release/libratatui_ffi.so
 
   pack:
     name: pack-nuget
@@ -231,12 +231,12 @@ jobs:
           dotnet-version: '9.0.x'
       - name: Build native linux-x64 for local run
         run: |
-          cd native/ratatui_ffi
+          cd native/ratatui-ffi
           cargo build --release
       - name: Put native into sample runtime
         run: |
           mkdir -p examples/Aot/runtimes/linux-x64/native
-          cp native/ratatui_ffi/target/release/libratatui_ffi.so examples/Aot/runtimes/linux-x64/native/
+          cp native/ratatui-ffi/target/release/libratatui_ffi.so examples/Aot/runtimes/linux-x64/native/
       - name: Publish AOT sample
         run: |
           dotnet publish examples/Aot/Aot.csproj -r linux-x64 -c Release
