@@ -8,6 +8,10 @@ public sealed class Scrollbar : IDisposable
 {
     private readonly ScrollbarHandle _handle;
     private bool _disposed;
+    private ScrollbarOrient _orient;
+    private ushort _position;
+    private ushort _contentLen;
+    private ushort _viewportLen;
     internal IntPtr DangerousHandle => _handle.DangerousGetHandle();
 
     public Scrollbar()
@@ -20,7 +24,21 @@ public sealed class Scrollbar : IDisposable
     public Scrollbar Configure(ScrollbarOrient orient, int position, int contentLength, int viewportLength)
     {
         EnsureNotDisposed();
-        Interop.Native.RatatuiScrollbarConfigure(_handle.DangerousGetHandle(), (uint)orient, (ushort)position, (ushort)contentLength, (ushort)viewportLength);
+        _orient = orient; _position = (ushort)position; _contentLen = (ushort)contentLength; _viewportLen = (ushort)viewportLength;
+        Interop.Native.RatatuiScrollbarConfigure(_handle.DangerousGetHandle(), (uint)_orient, _position, _contentLen, _viewportLen);
+        return this;
+    }
+
+    public Scrollbar Orientation(ScrollbarOrient orient) { return Configure(orient, _position, _contentLen, _viewportLen); }
+    public Scrollbar Position(int pos) { return Configure(_orient, pos, _contentLen, _viewportLen); }
+    public Scrollbar ContentLength(int len) { return Configure(_orient, _position, len, _viewportLen); }
+    public Scrollbar ViewportLength(int len) { return Configure(_orient, _position, _contentLen, len); }
+
+    public enum Side : uint { Left = 0, Right = 1, Top = 2, Bottom = 3 }
+    public Scrollbar OrientationSide(Side side)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiScrollbarSetOrientationSide(_handle.DangerousGetHandle(), (uint)side);
         return this;
     }
 
@@ -31,7 +49,12 @@ public sealed class Scrollbar : IDisposable
         return this;
     }
 
-    // UTF-8 title path can use spans in future.
+    public Scrollbar TitleAlignment(Alignment align)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiScrollbarSetBlockTitleAlignment(_handle.DangerousGetHandle(), (uint)align);
+        return this;
+    }
 
     private void EnsureNotDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(Scrollbar)); }
     public void Dispose() { if (_disposed) return; _handle.Dispose(); _disposed = true; }

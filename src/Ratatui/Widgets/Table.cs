@@ -106,6 +106,72 @@ public sealed class Table : IDisposable
         return this;
     }
 
+    // Width helpers
+    public Table WidthsPercentages(ReadOnlySpan<ushort> widths)
+    {
+        EnsureNotDisposed();
+        if (widths.IsEmpty) return this;
+        var temp = new ushort[widths.Length];
+        widths.CopyTo(temp);
+        Interop.Native.RatatuiTableSetWidthsPercentages(_handle.DangerousGetHandle(), temp, (UIntPtr)temp.Length);
+        return this;
+    }
+
+    public enum TableWidthKind : uint { Length = 0, Percentage = 1, Min = 2 }
+
+    public Table Widths(ReadOnlySpan<(TableWidthKind kind, ushort value)> specs)
+    {
+        EnsureNotDisposed();
+        if (specs.IsEmpty) return this;
+        var kinds = new uint[specs.Length];
+        var vals = new ushort[specs.Length];
+        for (int i = 0; i < specs.Length; i++) { kinds[i] = (uint)specs[i].kind; vals[i] = specs[i].value; }
+        Interop.Native.RatatuiTableSetWidths(_handle.DangerousGetHandle(), kinds, vals, (UIntPtr)specs.Length);
+        return this;
+    }
+
+    public Table ColumnSpacing(ushort spacing)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetColumnSpacing(_handle.DangerousGetHandle(), spacing);
+        return this;
+    }
+
+    public Table RowHeight(ushort height)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetRowHeight(_handle.DangerousGetHandle(), height);
+        return this;
+    }
+
+    public Table HeaderStyle(Style s)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetHeaderStyle(_handle.DangerousGetHandle(), s.ToFfi());
+        return this;
+    }
+
+    public Table ColumnHighlightStyle(Style s)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetColumnHighlightStyle(_handle.DangerousGetHandle(), s.ToFfi());
+        return this;
+    }
+
+    public Table CellHighlightStyle(Style s)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetCellHighlightStyle(_handle.DangerousGetHandle(), s.ToFfi());
+        return this;
+    }
+
+    public Table HighlightSpacing(uint spacing)
+    {
+        EnsureNotDisposed();
+        Interop.Native.RatatuiTableSetHighlightSpacing(_handle.DangerousGetHandle(), spacing);
+        return this;
+    }
+
     private void EnsureNotDisposed()
     {
         if (_disposed) throw new ObjectDisposedException(nameof(Table));
