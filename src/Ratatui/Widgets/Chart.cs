@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Ratatui;
 
@@ -126,6 +127,52 @@ public sealed class Chart : IDisposable
             finally
             {
                 System.Buffers.ArrayPool<double>.Shared.Return(array);
+            }
+        }
+        return this;
+    }
+
+    // Bulk datasets append (single FFI call). Copies names to UTF-8 + points to double[] for the call duration.
+    public Chart Datasets(params (string name, (double x, double y)[] points, Style? style, DatasetKind kind)[] datasets)
+    {
+        EnsureNotDisposed();
+        if (datasets == null || datasets.Length == 0) return this;
+        var specs = new Interop.Native.FfiChartDatasetSpec[datasets.Length];
+        var handles = new List<GCHandle>(datasets.Length * 2);
+        try
+        {
+            for (int i = 0; i < datasets.Length; i++)
+            {
+                var (name, pts, sty, kind) = datasets[i];
+                // Name as UTF-8 with NUL
+                var nameUtf8 = System.Text.Encoding.UTF8.GetBytes(name ?? string.Empty + "\0");
+                var nameHandle = GCHandle.Alloc(nameUtf8, GCHandleType.Pinned);
+                handles.Add(nameHandle);
+
+                // Flatten points
+                var len = pts?.Length ?? 0;
+                double[] flat = len == 0 ? Array.Empty<double>() : new double[len * 2];
+                for (int p = 0; p < len; p++) { flat[p*2] = pts![p].x; flat[p*2+1] = pts![p].y; }
+                var ptsHandle = GCHandle.Alloc(flat, GCHandleType.Pinned);
+                handles.Add(ptsHandle);
+
+                specs[i] = new Interop.Native.FfiChartDatasetSpec
+                {
+                    NameUtf8 = nameHandle.AddrOfPinnedObject(),
+                    PointsXY = ptsHandle.AddrOfPinnedObject(),
+                    LenPairs = (UIntPtr)len,
+                    Style = (sty ?? default).ToFfi(),
+                    Kind = (uint)kind,
+                };
+            }
+
+            Interop.Native.RatatuiChartAddDatasets(_handle.DangerousGetHandle(), specs, (UIntPtr)specs.Length);
+        }
+        finally
+        {
+            foreach (var h in handles)
+            {
+                if (h.IsAllocated) h.Free();
             }
         }
         return this;
