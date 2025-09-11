@@ -399,8 +399,6 @@ internal static partial class Native
     internal static extern void RatatuiGaugeSetBlockTitle(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiGaugeSetBlockTitleSpans(IntPtr g, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
-    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
-    internal static extern void RatatuiGaugeSetBlockTitleSpans(IntPtr g, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // LineGauge
     [DllImport(LibraryName, EntryPoint = "ratatui_linegauge_new", CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr RatatuiLineGaugeNew();
@@ -584,8 +582,6 @@ internal static partial class Native
     internal static extern void RatatuiTableSetBlockTitle(IntPtr tbl, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_table_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiTableSetBlockTitleSpans(IntPtr tbl, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
-    [DllImport(LibraryName, EntryPoint = "ratatui_table_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
-    internal static extern void RatatuiTableSetBlockTitleSpans(IntPtr tbl, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
 
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_table_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -646,10 +642,7 @@ internal static partial class Native
     internal static extern void RatatuiGaugeFree(IntPtr g);
     [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_ratio", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiGaugeSetRatio(IntPtr g, float ratio);
-    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_label", CallingConvention = CallingConvention.Cdecl)]
-    internal static extern void RatatuiGaugeSetLabel(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? label);
-    [DllImport(LibraryName, EntryPoint = "ratatui_gauge_set_block_title", CallingConvention = CallingConvention.Cdecl)]
-    internal static extern void RatatuiGaugeSetBlockTitle(IntPtr g, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
+    // (declared earlier in Gauge section)
     [DllImport(LibraryName, EntryPoint = "ratatui_terminal_draw_gauge_in", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool RatatuiTerminalDrawGaugeIn(IntPtr term, IntPtr g, FfiRect rect);
@@ -691,8 +684,6 @@ internal static partial class Native
     internal static extern void RatatuiBarChartSetLabelsSpans(IntPtr b, IntPtr lines, UIntPtr len);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiBarChartSetBlockTitle(IntPtr b, [MarshalAs(UnmanagedType.LPUTF8Str)] string? title, [MarshalAs(UnmanagedType.I1)] bool showBorder);
-    [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
-    internal static extern void RatatuiBarChartSetBlockTitleSpans(IntPtr b, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     [DllImport(LibraryName, EntryPoint = "ratatui_barchart_set_block_title_spans", CallingConvention = CallingConvention.Cdecl)]
     internal static extern void RatatuiBarChartSetBlockTitleSpans(IntPtr b, IntPtr spans, UIntPtr len, [MarshalAs(UnmanagedType.I1)] bool showBorder);
     // removed: barchart bytes variants

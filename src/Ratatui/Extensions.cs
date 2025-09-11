@@ -25,10 +25,7 @@ public static class Extensions
     // Table sugar
     public static Table Header(this Table t, ReadOnlySpan<byte> utf8, Style? style = null)
     {
-        // Single header cell via spans
-        Span<Batching.SpanRun> runs = stackalloc Batching.SpanRun[1];
-        runs[0] = new Batching.SpanRun(utf8.ToArray(), style ?? default);
-        return t.Headers(runs);
+        var run = new Batching.SpanRun(utf8.ToArray(), style ?? default);
+        return t.Headers(new ReadOnlySpan<Batching.SpanRun>(in run));
     }
 }
-

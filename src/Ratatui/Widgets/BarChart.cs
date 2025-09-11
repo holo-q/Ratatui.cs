@@ -65,21 +65,24 @@ public sealed class BarChart : IDisposable
         // Make a NUL-terminated copy per label slice inside one temporary buffer? Simpler: allocate per label pointer into separate small stackallocs.
         // For simplicity and zero heap allocs, we duplicate into small per-label stacks in a loop.
         int start = 0, idx = 0;
-        for (int i = 0; i <= tsvUtf8.Length; i++)
+        fixed (Interop.Native.FfiSpan* pSpanBuf = spanBuf)
         {
-            bool end = (i == tsvUtf8.Length) || (tsvUtf8[i] == (byte) '\t');
-            if (!end) continue;
-            int len = i - start;
-            var buf = stackalloc byte[len + 1];
-            if (len > 0) tsvUtf8.Slice(start, len).CopyTo(new Span<byte>(buf, len));
-            buf[len] = 0;
-            spanBuf[idx] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
-            lines[idx] = new Interop.Native.FfiLineSpans { Spans = (IntPtr)(&spanBuf[idx]), Len = (UIntPtr)1 };
-            idx++; start = i + 1;
-        }
-        fixed (Interop.Native.FfiLineSpans* pLines = lines)
-        {
-            Interop.Native.RatatuiBarChartSetLabelsSpans(_handle.DangerousGetHandle(), (IntPtr)pLines, (UIntPtr)idx);
+            for (int i = 0; i <= tsvUtf8.Length; i++)
+            {
+                bool end = (i == tsvUtf8.Length) || (tsvUtf8[i] == (byte) '\t');
+                if (!end) continue;
+                int len = i - start;
+                var buf = stackalloc byte[len + 1];
+                if (len > 0) tsvUtf8.Slice(start, len).CopyTo(new Span<byte>(buf, len));
+                buf[len] = 0;
+                spanBuf[idx] = new Interop.Native.FfiSpan { TextUtf8 = (IntPtr)buf, Style = default };
+                lines[idx] = new Interop.Native.FfiLineSpans { Spans = (IntPtr)(pSpanBuf + idx), Len = (UIntPtr)1 };
+                idx++; start = i + 1;
+            }
+            fixed (Interop.Native.FfiLineSpans* pLines = lines)
+            {
+                Interop.Native.RatatuiBarChartSetLabelsSpans(_handle.DangerousGetHandle(), (IntPtr)pLines, (UIntPtr)idx);
+            }
         }
         return this;
     }
