@@ -32,7 +32,7 @@ jobs:
           set -euo pipefail
           if dotnet --list-runtimes | grep -q '^Microsoft.NETCore.App 9\.'; then TFM=net9.0; else TFM=net8.0; fi
           echo "Using framework $TFM"
-          dotnet restore examples/Snapshots/Snapshots.csproj -f $TFM
+          dotnet restore examples/Snapshots/Snapshots.csproj -p:TargetFramework=$TFM
           dotnet build examples/Snapshots/Snapshots.csproj -c Release -f $TFM --no-restore
           dotnet run --project examples/Snapshots/Snapshots.csproj -c Release -f $TFM --no-build
       - name: Install ImageMagick + fonts
