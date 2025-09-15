@@ -13,8 +13,8 @@ public sealed class Terminal : IDisposable
     private bool _alt;
     private bool _cursorShown = true;
     private const int MaxFrameDepth = 32;
-    private readonly System.Collections.Generic.List<DrawCommand>[] _frameBuffers = new System.Collections.Generic.List<DrawCommand>[MaxFrameDepth];
-    private int _frameDepth; // 0 = no frame; N = current depth
+    private readonly System.Collections.Generic.List<DrawCommand> _frameBuffer = new System.Collections.Generic.List<DrawCommand>(64);
+    private int _frameDepth; // 0 = no frame; N = current depth (render only when returns to 0)
 
     public Terminal()
     {
@@ -25,8 +25,7 @@ public sealed class Terminal : IDisposable
         if (ptr == IntPtr.Zero)
             throw new InvalidOperationException("Failed to initialize Ratatui terminal");
         _handle = TerminalHandle.FromRaw(ptr);
-        // Pre-initialize frame buffers
-        for (int i = 0; i < MaxFrameDepth; i++) _frameBuffers[i] = new System.Collections.Generic.List<DrawCommand>(64);
+        // single buffer used for all nested frames; present when depth returns to 0
     }
 
     public void Clear()
@@ -102,7 +101,7 @@ public sealed class Terminal : IDisposable
         {
             // Use current viewport when drawing without an explicit rect
             var vp = Viewport;
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Paragraph(paragraph, vp));
+            _frameBuffer.Add(DrawCommand.Paragraph(paragraph, vp));
             return;
         }
         var ok = Interop.Native.RatatuiTerminalDrawParagraph(_handle.DangerousGetHandle(), paragraph.DangerousHandle);
@@ -123,7 +122,7 @@ public sealed class Terminal : IDisposable
         if (paragraph is null) throw new ArgumentNullException(nameof(paragraph));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Paragraph(paragraph, rect));
+            _frameBuffer.Add(DrawCommand.Paragraph(paragraph, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -140,7 +139,7 @@ public sealed class Terminal : IDisposable
         if (list is null) throw new ArgumentNullException(nameof(list));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.List(list, rect));
+            _frameBuffer.Add(DrawCommand.List(list, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -157,7 +156,7 @@ public sealed class Terminal : IDisposable
         if (table is null) throw new ArgumentNullException(nameof(table));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Table(table, rect));
+            _frameBuffer.Add(DrawCommand.Table(table, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -174,7 +173,7 @@ public sealed class Terminal : IDisposable
         if (gauge is null) throw new ArgumentNullException(nameof(gauge));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Gauge(gauge, rect));
+            _frameBuffer.Add(DrawCommand.Gauge(gauge, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -191,7 +190,7 @@ public sealed class Terminal : IDisposable
         if (tabs is null) throw new ArgumentNullException(nameof(tabs));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Tabs(tabs, rect));
+            _frameBuffer.Add(DrawCommand.Tabs(tabs, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -208,7 +207,7 @@ public sealed class Terminal : IDisposable
         if (chart is null) throw new ArgumentNullException(nameof(chart));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.BarChart(chart, rect));
+            _frameBuffer.Add(DrawCommand.BarChart(chart, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -225,7 +224,7 @@ public sealed class Terminal : IDisposable
         if (spark is null) throw new ArgumentNullException(nameof(spark));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Sparkline(spark, rect));
+            _frameBuffer.Add(DrawCommand.Sparkline(spark, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -242,7 +241,7 @@ public sealed class Terminal : IDisposable
         if (sb is null) throw new ArgumentNullException(nameof(sb));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Scrollbar(sb, rect));
+            _frameBuffer.Add(DrawCommand.Scrollbar(sb, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -259,7 +258,7 @@ public sealed class Terminal : IDisposable
         if (chart is null) throw new ArgumentNullException(nameof(chart));
         if (_frameDepth > 0)
         {
-            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Chart(chart, rect));
+            _frameBuffer.Add(DrawCommand.Chart(chart, rect));
             return;
         }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
@@ -321,18 +320,51 @@ public sealed class Terminal : IDisposable
     public void DrawFrame(ReadOnlySpan<DrawCommand> commands)
     {
         EnsureNotDisposed();
-        var ffi = DrawCommand.ToFfi(commands);
-        var ok = Interop.Native.RatatuiTerminalDrawFrame(_handle.DangerousGetHandle(), ffi, (UIntPtr)ffi.Length);
-        if (!ok) throw new InvalidOperationException("DrawFrame failed");
+        // Convert commands to FFI with minimal allocation: stackalloc for small frames, ArrayPool otherwise
+        int n = commands.Length;
+        if (n == 0) { var ok0 = Interop.Native.RatatuiTerminalDrawFrame(_handle.DangerousGetHandle(), Array.Empty<Interop.Native.FfiDrawCmd>(), (UIntPtr)0); if (!ok0) throw new InvalidOperationException("DrawFrame failed"); return; }
+        const int StackThreshold = 64;
+        if (n <= StackThreshold)
+        {
+            Span<Interop.Native.FfiDrawCmd> buf = stackalloc Interop.Native.FfiDrawCmd[n];
+            for (int i = 0; i < n; i++) buf[i] = commands[i].Ffi;
+            var ok = Interop.Native.RatatuiTerminalDrawFrame(_handle.DangerousGetHandle(), buf.ToArray(), (UIntPtr)n);
+            if (!ok) throw new InvalidOperationException("DrawFrame failed");
+        }
+        else
+        {
+            var pool = System.Buffers.ArrayPool<Interop.Native.FfiDrawCmd>.Shared;
+            var arr = pool.Rent(n);
+            try
+            {
+                for (int i = 0; i < n; i++) arr[i] = commands[i].Ffi;
+                var ok = Interop.Native.RatatuiTerminalDrawFrame(_handle.DangerousGetHandle(), arr, (UIntPtr)n);
+                if (!ok) throw new InvalidOperationException("DrawFrame failed");
+            }
+            finally { pool.Return(arr, clearArray: false); }
+        }
+    }
+
+    public IDisposable BeginFrame()
+    {
+        PushFrame();
+        return new FrameScope(this);
+    }
+
+    private sealed class FrameScope : IDisposable
+    {
+        private Terminal _t;
+        private bool _disposed;
+        public FrameScope(Terminal t) { _t = t; }
+        public void Dispose() { if (_disposed) return; _disposed = true; _t.PopFrame(); }
     }
 
     public void PushFrame()
     {
         EnsureNotDisposed();
         if (_frameDepth >= MaxFrameDepth) throw new InvalidOperationException("Max frame nesting depth exceeded");
-        // Clear the buffer at the new depth and push
-        var buf = _frameBuffers[_frameDepth];
-        buf.Clear();
+        // On first push, clear the shared buffer. Nested pushes only increment depth.
+        if (_frameDepth == 0) _frameBuffer.Clear();
         _frameDepth++;
     }
 
@@ -340,13 +372,13 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (_frameDepth == 0) throw new InvalidOperationException("PopFrame called with no frame in progress");
-        // Pop the top buffer and draw it
-        var idx = _frameDepth - 1;
-        var buf = _frameBuffers[idx];
-        if (buf.Count > 0)
-            DrawFrame(CollectionsMarshal.AsSpan(buf));
-        buf.Clear();
         _frameDepth--;
+        if (_frameDepth == 0)
+        {
+            if (_frameBuffer.Count > 0)
+                DrawFrame(CollectionsMarshal.AsSpan(_frameBuffer));
+            _frameBuffer.Clear();
+        }
     }
 
     private void EnsureNotDisposed()
@@ -402,7 +434,18 @@ public sealed class Terminal : IDisposable
         EnsureNotDisposed();
         if (list is null) throw new ArgumentNullException(nameof(list));
         if (state is null) throw new ArgumentNullException(nameof(state));
-        if (_frameDepth > 0) throw new InvalidOperationException("List(state) drawing is not supported in frame mode yet");
+        if (_frameDepth > 0)
+        {
+            // Frame mode fallback: encode selection/offset into the List handle, then enqueue a stateless List draw.
+            if (state.SelectedIndex is int sel)
+            {
+                Interop.Native.RatatuiListSetSelected(list.DangerousHandle, sel);
+            }
+            var off = (ushort)Math.Max(0, state.OffsetValue);
+            Interop.Native.RatatuiListSetScrollOffset(list.DangerousHandle, off);
+            _frameBuffer.Add(DrawCommand.List(list, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawListStateIn(_handle.DangerousGetHandle(), list.DangerousHandle, r, state.DangerousHandle);
         if (!ok) throw new InvalidOperationException("DrawListState failed");
@@ -413,7 +456,16 @@ public sealed class Terminal : IDisposable
         EnsureNotDisposed();
         if (table is null) throw new ArgumentNullException(nameof(table));
         if (state is null) throw new ArgumentNullException(nameof(state));
-        if (_frameDepth > 0) throw new InvalidOperationException("Table(state) drawing is not supported in frame mode yet");
+        if (_frameDepth > 0)
+        {
+            if (state.SelectedIndex is int sel)
+            {
+                Interop.Native.RatatuiTableSetSelected(table.DangerousHandle, sel);
+            }
+            // Offset handling for Table in frame mode is not available via widget; rely on Ratatui to clip.
+            _frameBuffer.Add(DrawCommand.Table(table, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawTableStateIn(_handle.DangerousGetHandle(), table.DangerousHandle, r, state.DangerousHandle);
         if (!ok) throw new InvalidOperationException("DrawTableState failed");
