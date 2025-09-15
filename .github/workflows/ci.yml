@@ -182,7 +182,18 @@ jobs:
         run: |
           VER=${{ github.ref_name }}
           if [[ "$VER" == v* ]]; then VER=${VER#v}; else VER=0.1.0-ci.${{ github.run_number }}; fi
-          dotnet pack src/Ratatui/Ratatui.csproj -c Release -o artifacts -p:PackageVersion=$VER
+          # Skip in-MSBuild FFI coverage to avoid parallel races; run it explicitly next.
+          dotnet pack src/Ratatui/Ratatui.csproj -c Release -o artifacts -p:PackageVersion=$VER -p:SkipFfiCoverage=true
+      - name: FFI coverage (CI)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Build the coverage tool once
+          dotnet build tools/BindingCoverage/BindingCoverage.csproj -c Release
+          TOOL=tools/BindingCoverage/bin/Release/net9.0/BindingCoverage.dll
+          ASM=src/Ratatui/bin/Release/net9.0/Ratatui.dll
+          # Run coverage check; fail build on mismatch
+          dotnet exec "$TOOL" --assembly "$ASM" --project-dir src/Ratatui --allow-extra
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
