@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Ratatui;
 
@@ -11,6 +12,9 @@ public sealed class Terminal : IDisposable
     private bool _raw;
     private bool _alt;
     private bool _cursorShown = true;
+    private const int MaxFrameDepth = 32;
+    private readonly System.Collections.Generic.List<DrawCommand>[] _frameBuffers = new System.Collections.Generic.List<DrawCommand>[MaxFrameDepth];
+    private int _frameDepth; // 0 = no frame; N = current depth
 
     public Terminal()
     {
@@ -21,6 +25,8 @@ public sealed class Terminal : IDisposable
         if (ptr == IntPtr.Zero)
             throw new InvalidOperationException("Failed to initialize Ratatui terminal");
         _handle = TerminalHandle.FromRaw(ptr);
+        // Pre-initialize frame buffers
+        for (int i = 0; i < MaxFrameDepth; i++) _frameBuffers[i] = new System.Collections.Generic.List<DrawCommand>(64);
     }
 
     public void Clear()
@@ -92,9 +98,15 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (paragraph is null) throw new ArgumentNullException(nameof(paragraph));
+        if (_frameDepth > 0)
+        {
+            // Use current viewport when drawing without an explicit rect
+            var vp = Viewport;
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Paragraph(paragraph, vp));
+            return;
+        }
         var ok = Interop.Native.RatatuiTerminalDrawParagraph(_handle.DangerousGetHandle(), paragraph.DangerousHandle);
-        if (!ok)
-            throw new InvalidOperationException("Draw failed");
+        if (!ok) throw new InvalidOperationException("Draw failed");
     }
 
     public (int Width, int Height) Size()
@@ -109,10 +121,14 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (paragraph is null) throw new ArgumentNullException(nameof(paragraph));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Paragraph(paragraph, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawParagraphIn(_handle.DangerousGetHandle(), paragraph.DangerousHandle, r);
-        if (!ok)
-            throw new InvalidOperationException("DrawIn failed");
+        if (!ok) throw new InvalidOperationException("DrawIn failed");
     }
 
     public void Draw(Paragraph paragraph, Vec2i pos, Vec2i size)
@@ -122,10 +138,14 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (list is null) throw new ArgumentNullException(nameof(list));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.List(list, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawListIn(_handle.DangerousGetHandle(), list.DangerousHandle, r);
-        if (!ok)
-            throw new InvalidOperationException("DrawList failed");
+        if (!ok) throw new InvalidOperationException("DrawList failed");
     }
 
     public void Draw(List list, Vec2i pos, Vec2i size)
@@ -135,10 +155,14 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (table is null) throw new ArgumentNullException(nameof(table));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Table(table, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawTableIn(_handle.DangerousGetHandle(), table.DangerousHandle, r);
-        if (!ok)
-            throw new InvalidOperationException("DrawTable failed");
+        if (!ok) throw new InvalidOperationException("DrawTable failed");
     }
 
     public void Draw(Table table, Vec2i pos, Vec2i size)
@@ -148,6 +172,11 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (gauge is null) throw new ArgumentNullException(nameof(gauge));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Gauge(gauge, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawGaugeIn(_handle.DangerousGetHandle(), gauge.DangerousHandle, r);
         if (!ok) throw new InvalidOperationException("DrawGauge failed");
@@ -160,6 +189,11 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (tabs is null) throw new ArgumentNullException(nameof(tabs));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Tabs(tabs, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawTabsIn(_handle.DangerousGetHandle(), tabs.DangerousHandle, r);
         if (!ok) throw new InvalidOperationException("DrawTabs failed");
@@ -172,6 +206,11 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (chart is null) throw new ArgumentNullException(nameof(chart));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.BarChart(chart, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawBarChartIn(_handle.DangerousGetHandle(), chart.DangerousHandle, r);
         if (!ok) throw new InvalidOperationException("DrawBarChart failed");
@@ -184,6 +223,11 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (spark is null) throw new ArgumentNullException(nameof(spark));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Sparkline(spark, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawSparklineIn(_handle.DangerousGetHandle(), spark.DangerousHandle, r);
         if (!ok) throw new InvalidOperationException("DrawSparkline failed");
@@ -196,6 +240,11 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (sb is null) throw new ArgumentNullException(nameof(sb));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Scrollbar(sb, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawScrollbarIn(_handle.DangerousGetHandle(), sb.DangerousHandle, r);
         if (!ok) throw new InvalidOperationException("DrawScrollbar failed");
@@ -208,6 +257,11 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (chart is null) throw new ArgumentNullException(nameof(chart));
+        if (_frameDepth > 0)
+        {
+            _frameBuffers[_frameDepth - 1].Add(DrawCommand.Chart(chart, rect));
+            return;
+        }
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawChartIn(_handle.DangerousGetHandle(), chart.DangerousHandle, r);
         if (!ok) throw new InvalidOperationException("DrawChart failed");
@@ -220,6 +274,8 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (g is null) throw new ArgumentNullException(nameof(g));
+        if (_frameDepth > 0)
+            throw new InvalidOperationException("LineGauge drawing is not supported in frame mode yet");
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawLineGaugeIn(_handle.DangerousGetHandle(), g.DangerousHandle, r);
         if (!ok) throw new InvalidOperationException("DrawLineGauge failed");
@@ -232,6 +288,8 @@ public sealed class Terminal : IDisposable
     {
         EnsureNotDisposed();
         if (c is null) throw new ArgumentNullException(nameof(c));
+        if (_frameDepth > 0)
+            throw new InvalidOperationException("Canvas drawing is not supported in frame mode yet");
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawCanvasIn(_handle.DangerousGetHandle(), c.DangerousHandle, r);
         if (!ok) throw new InvalidOperationException("DrawCanvas failed");
@@ -266,6 +324,29 @@ public sealed class Terminal : IDisposable
         var ffi = DrawCommand.ToFfi(commands);
         var ok = Interop.Native.RatatuiTerminalDrawFrame(_handle.DangerousGetHandle(), ffi, (UIntPtr)ffi.Length);
         if (!ok) throw new InvalidOperationException("DrawFrame failed");
+    }
+
+    public void PushFrame()
+    {
+        EnsureNotDisposed();
+        if (_frameDepth >= MaxFrameDepth) throw new InvalidOperationException("Max frame nesting depth exceeded");
+        // Clear the buffer at the new depth and push
+        var buf = _frameBuffers[_frameDepth];
+        buf.Clear();
+        _frameDepth++;
+    }
+
+    public void PopFrame()
+    {
+        EnsureNotDisposed();
+        if (_frameDepth == 0) throw new InvalidOperationException("PopFrame called with no frame in progress");
+        // Pop the top buffer and draw it
+        var idx = _frameDepth - 1;
+        var buf = _frameBuffers[idx];
+        if (buf.Count > 0)
+            DrawFrame(CollectionsMarshal.AsSpan(buf));
+        buf.Clear();
+        _frameDepth--;
     }
 
     private void EnsureNotDisposed()
@@ -321,6 +402,7 @@ public sealed class Terminal : IDisposable
         EnsureNotDisposed();
         if (list is null) throw new ArgumentNullException(nameof(list));
         if (state is null) throw new ArgumentNullException(nameof(state));
+        if (_frameDepth > 0) throw new InvalidOperationException("List(state) drawing is not supported in frame mode yet");
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawListStateIn(_handle.DangerousGetHandle(), list.DangerousHandle, r, state.DangerousHandle);
         if (!ok) throw new InvalidOperationException("DrawListState failed");
@@ -331,6 +413,7 @@ public sealed class Terminal : IDisposable
         EnsureNotDisposed();
         if (table is null) throw new ArgumentNullException(nameof(table));
         if (state is null) throw new ArgumentNullException(nameof(state));
+        if (_frameDepth > 0) throw new InvalidOperationException("Table(state) drawing is not supported in frame mode yet");
         var r = new Interop.Native.FfiRect { X = (ushort)rect.X, Y = (ushort)rect.Y, Width = (ushort)rect.Width, Height = (ushort)rect.Height };
         var ok = Interop.Native.RatatuiTerminalDrawTableStateIn(_handle.DangerousGetHandle(), table.DangerousHandle, r, state.DangerousHandle);
         if (!ok) throw new InvalidOperationException("DrawTableState failed");

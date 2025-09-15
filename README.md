@@ -46,6 +46,12 @@ term.DrawFrame(
   DrawCommand.Paragraph(p, new Rect(0,0,w/2,h)),
   DrawCommand.Gauge(new Gauge().Ratio(0.42f).Title("Load"), new Rect(w/2,0,w/2,3))
 );
+
+// Alternatively, buffer Draw(...) calls between PushFrame/PopFrame
+term.PushFrame();
+term.Draw(p, new Rect(0,0,w/2,h));
+term.Draw(new Gauge().Ratio(0.42f).Title("Load"), new Rect(w/2,0,w/2,3));
+term.PopFrame();
 ```
 
 ## Headless snapshots (CI-friendly)
