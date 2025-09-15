@@ -45,10 +45,13 @@ class Program
         var right = new Rect(rect.X + rect.Width/2, rect.Y, rect.Width - rect.Width/2, rect.Height/2);
         var bottom = new Rect(rect.X, rect.Y + rect.Height/2, rect.Width, rect.Height - rect.Height/2);
 
+        // Demonstrate buffered frame rendering
+        term.PushFrame();
         term.Draw(para, left);
         term.Draw(list, right);
         term.Draw(table, new Rect(bottom.X, bottom.Y, bottom.Width/2, bottom.Height));
         term.Draw(chart, new Rect(bottom.X + bottom.Width/2, bottom.Y, bottom.Width - bottom.Width/2, bottom.Height));
+        term.PopFrame();
 
         using var cts = new CancellationTokenSource();
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
