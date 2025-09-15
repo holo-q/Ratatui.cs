@@ -46,7 +46,7 @@
     <SkipFfiCoverage Condition="'$(SkipFfiCoverage)' == ''">false</SkipFfiCoverage>
   </PropertyGroup>
 
-  <Target Name="CheckFfiCoverage" AfterTargets="Build" Condition=" '$(SkipFfiCoverage)' != 'true' and '$(TargetPath)' != '' ">
+  <Target Name="CheckFfiCoverage" AfterTargets="Build" Condition=" '$(SkipFfiCoverage)' != 'true' and '$(TargetPath)' != '' and '$(TargetFramework)' == 'net9.0' ">
     <Message Importance="High" Text="Checking FFI coverage for $(TargetFramework) ($(Configuration))..." />
     <Exec Command="dotnet run --no-build --no-restore --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot; --allow-extra" />
     <Exec Command="dotnet run --no-build --no-restore --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot; --allow-extra --emit-suggestions &quot;$(IntermediateOutputPath)Native.Suggestions.g.cs&quot;" />
