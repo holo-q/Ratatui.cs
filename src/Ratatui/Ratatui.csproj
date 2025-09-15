@@ -48,15 +48,15 @@
 
   <Target Name="CheckFfiCoverage" AfterTargets="Build" Condition=" '$(SkipFfiCoverage)' != 'true' and '$(TargetPath)' != '' ">
     <Message Importance="High" Text="Checking FFI coverage for $(TargetFramework) ($(Configuration))..." />
-    <Exec Command="dotnet run --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot; --allow-extra" />
-    <Exec Command="dotnet run --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot; --allow-extra --emit-suggestions &quot;$(IntermediateOutputPath)Native.Suggestions.g.cs&quot;" />
+    <Exec Command="dotnet run --no-build --no-restore --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot; --allow-extra" />
+    <Exec Command="dotnet run --no-build --no-restore --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot; --allow-extra --emit-suggestions &quot;$(IntermediateOutputPath)Native.Suggestions.g.cs&quot;" />
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)Native.Suggestions.g.cs" Condition="Exists('$(IntermediateOutputPath)Native.Suggestions.g.cs')" />
     </ItemGroup>
   </Target>
   <Target Name="GenerateFfiStubs" AfterTargets="Build" Condition=" '$(SkipFfiCoverage)' != 'true' and '$(TargetFramework)' == 'net9.0' ">
     <Message Importance="High" Text="Generating FFI stubs (if any missing)..." />
-    <Exec Command="dotnet run --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot; --emit-generated &quot;$(IntermediateOutputPath)Native.Generated.g.cs&quot; --allow-extra" />
+    <Exec Command="dotnet run --no-build --no-restore --project &quot;$(MSBuildProjectDirectory)/../../tools/BindingCoverage/BindingCoverage.csproj&quot; -- --assembly &quot;$(TargetPath)&quot; --project-dir &quot;$(MSBuildProjectDirectory)&quot; --emit-generated &quot;$(IntermediateOutputPath)Native.Generated.g.cs&quot; --allow-extra" />
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)Native.Generated.g.cs" Condition="Exists('$(IntermediateOutputPath)Native.Generated.g.cs')" />
     </ItemGroup>
