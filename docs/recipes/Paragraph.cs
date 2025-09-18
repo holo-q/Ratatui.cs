@@ -8,7 +8,10 @@ public static class ParagraphRecipe
             .AppendSpan("styled", new Style(fg: Color.LightCyan, italic: true))
             .NewLine()
             .AppendSpan("wrap and align", new Style(underline: true))
-            .Title("Para")
+            .Block(Block.Default
+                .Borders(Borders.All)
+                .BorderType(BorderType.Rounded)
+                .Title("Para"))
             .Align(Alignment.Center)
             .Wrap();
         term.Draw(p, new Rect(0,0,30,5));

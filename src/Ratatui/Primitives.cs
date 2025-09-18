@@ -2,11 +2,11 @@ namespace Ratatui;
 
 public readonly record struct Rect(int X, int Y, int Width, int Height)
 {
-    public static Rect FromSize(int width, int height) => new(0, 0, width, height);
-    public Rect SplitLeft(int w) => new(X, Y, w, Height);
-    public Rect SplitRight(int w) => new(X + Width - w, Y, w, Height);
-    public (Rect Left, Rect Right) SplitVertical(int leftWidth) => (SplitLeft(leftWidth), new Rect(X + leftWidth, Y, Width - leftWidth, Height));
-    public (Rect Top, Rect Bottom) SplitHorizontal(int topHeight) => (new Rect(X, Y, Width, topHeight), new Rect(X, Y + topHeight, Width, Height - topHeight));
+    public static Rect                    FromSize(int        width, int height) => new(0, 0, width, height);
+    public        Rect                    SplitLeft(int       w)         => this with { Width = w };
+    public        Rect                    SplitRight(int      w)         => this with { X = X + Width - w, Width = w };
+    public        (Rect Left, Rect Right) SplitVertical(int   leftWidth) => (SplitLeft(leftWidth), this with { X = X + leftWidth, Width = Width - leftWidth });
+    public        (Rect Top, Rect Bottom) SplitHorizontal(int topHeight) => (this with { Height = topHeight }, this with { Y = Y + topHeight, Height = Height - topHeight });
 
     // Vector-friendly aliases and helpers
     public int x => X;
@@ -17,10 +17,10 @@ public readonly record struct Rect(int X, int Y, int Width, int Height)
     public Vec2i xy => new(X, Y);
     public Vec2i size => new(Width, Height);
 
-    public static Rect From(Vec2i pos, Vec2i size) => new(pos.X, pos.Y, size.X, size.Y);
-    public Rect WithPos(Vec2i p) => new(p.X, p.Y, Width, Height);
-    public Rect WithSize(Vec2i s) => new(X, Y, s.X, s.Y);
-    public bool Contains(Vec2i p) => p.X >= X && p.Y >= Y && p.X < X + Width && p.Y < Y + Height;
+    public static Rect From(Vec2i     pos, Vec2i size) => new(pos.X, pos.Y, size.X, size.Y);
+    public        Rect WithPos(Vec2i  p) => this with { X = p.X, Y = p.Y };
+    public        Rect WithSize(Vec2i s) => this with { Width = s.X, Height = s.Y };
+    public        bool Contains(Vec2i p) => p.X >= X && p.Y >= Y && p.X < X + Width && p.Y < Y + Height;
 }
 
 public enum EventKind { None = 0, Key = 1, Resize = 2, Mouse = 3 }

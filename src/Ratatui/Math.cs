@@ -14,6 +14,8 @@ public readonly struct Vec2i : IEquatable<Vec2i>
     public Vec2i xy => this;
     public Vec2i yx => new(Y, X);
     public Vec2i pos => this;
+    public int w => X;
+    public int h => Y;
 
     public Vec2i(int x, int y) { X = x; Y = y; }
 
@@ -48,4 +50,3 @@ public readonly struct Vec2i : IEquatable<Vec2i>
     public override bool Equals(object? obj) => obj is Vec2i o && Equals(o);
     public override int GetHashCode() => HashCode.Combine(X, Y);
 }
-

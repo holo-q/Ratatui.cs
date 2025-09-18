@@ -31,7 +31,7 @@
     <PackageReleaseNotes>Ratatui.cs: .NET/C# Terminal UI bindings for Rust Ratatui with widgets, events, batched frames, and headless testing. Cross-platform native binaries for Windows, Linux, macOS.</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" />
+    <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" CopyToOutputDirectory="PreserveNewest" />
     <None Include="README.md" Pack="true" PackagePath="" />
     <None Include="ratatui-icon.png" Pack="true" PackagePath="" />
     <None Include="ratatui-logo.svg" Pack="true" PackagePath="" />

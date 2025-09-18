@@ -43,6 +43,30 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
+    public Paragraph Block(Block block)
+    {
+        if (block is null) throw new ArgumentNullException(nameof(block));
+        EnsureNotDisposed();
+        var spec = block.Spec;
+        Interop.Native.RatatuiParagraphSetBlockAdv(
+            _handle.DangerousGetHandle(),
+            (byte)spec.Borders,
+            (uint)spec.BorderType,
+            spec.Padding.Left,
+            spec.Padding.Top,
+            spec.Padding.Right,
+            spec.Padding.Bottom,
+            IntPtr.Zero,
+            UIntPtr.Zero);
+        Interop.Native.RatatuiParagraphSetBlockTitleAlignment(_handle.DangerousGetHandle(), (uint)spec.TitleAlignment);
+        if (spec.TitleExplicit)
+        {
+            var showBorder = spec.Borders != Borders.None || spec.ShowBorder;
+            Interop.Native.RatatuiParagraphSetBlockTitle(_handle.DangerousGetHandle(), spec.Title, showBorder);
+        }
+        return this;
+    }
+
     // UTF-8 title overload can be restored using spans+adv APIs if needed.
 
     public Paragraph AppendLine(string text, Style? style = null)
@@ -124,6 +148,18 @@ public sealed class Paragraph : IDisposable
         return this;
     }
 
+	public static Paragraph operator +(Paragraph paragraph, StyledSpan span)
+	{
+		if (paragraph is null) throw new ArgumentNullException(nameof(paragraph));
+		if (span.IsEmpty) return paragraph;
+		if (span.TryGetStyle(out Style style)) paragraph.AppendSpan(span.Text, style);
+		else paragraph.AppendSpan(span.Text);
+		return paragraph;
+	}
+
+	public static Paragraph operator +(Paragraph paragraph, string text)
+		=> paragraph + (StyledSpan)text;
+
     public Paragraph Align(Alignment alignment)
     {
         EnsureNotDisposed();
@@ -149,6 +185,43 @@ public sealed class Paragraph : IDisposable
         _handle.Dispose();
         _disposed = true;
     }
+}
+
+public readonly struct StyledSpan
+{
+	private readonly Style? _style;
+
+	public StyledSpan(string? text)
+		: this(text, null) { }
+
+	public StyledSpan(string? text, Style? style)
+	{
+		Text   = text ?? string.Empty;
+		_style = style;
+	}
+
+	public string Text { get; }
+
+	public bool IsEmpty => string.IsNullOrEmpty(Text);
+
+	public bool TryGetStyle(out Style style)
+	{
+		if (_style.HasValue) {
+			style = _style.Value;
+			return true;
+		}
+		style = default;
+		return false;
+	}
+
+	public static implicit operator StyledSpan(string? text) => new StyledSpan(text);
+
+	public static StyledSpan operator |(StyledSpan seed, Style style)
+		=> new StyledSpan(seed.Text, style);
+
+	public static StyledSpan operator |(Style style, StyledSpan seed)
+		=> new StyledSpan(seed.Text, style);
+
 }
 
 public enum Alignment : uint

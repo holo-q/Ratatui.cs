@@ -108,7 +108,7 @@ public sealed class Terminal : IDisposable
         if (!ok) throw new InvalidOperationException("Draw failed");
     }
 
-    public (int Width, int Height) Size()
+    public (int w, int h) Size()
     {
         EnsureNotDisposed();
         if (!Interop.Native.RatatuiTerminalSize(out var w, out var h))

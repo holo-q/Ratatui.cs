@@ -12,6 +12,9 @@ public static class ParagraphExtensions
     public static Paragraph Span(this Paragraph p, string text, Style? style = null)
         => p.AppendSpan(text, style);
 
+    public static Paragraph Span(this Paragraph p, StyledSpan span)
+        => p + span;
+
     // Span-first batching aliases
     public static Paragraph Spans(this Paragraph p, ReadOnlySpan<Batching.SpanRun> runs)
         => p.AppendSpans(runs);

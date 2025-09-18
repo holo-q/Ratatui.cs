@@ -25,6 +25,12 @@ public readonly struct Style
         Fg = fg; Bg = bg; Bold = bold; Italic = italic; Underline = underline; Dim = dim; Crossed = crossed; Reversed = reversed; RapidBlink = rapidBlink; SlowBlink = slowBlink;
     }
 
+    public static StyledSpan operator |(Style style, string text)
+        => new StyledSpan(text, style);
+
+    public static StyledSpan operator |(string text, Style style)
+        => new StyledSpan(text, style);
+
     internal Interop.Native.FfiStyle ToFfi()
     {
         var mods = Interop.Native.FfiStyleMods.None;
@@ -44,4 +50,3 @@ public readonly struct Style
         };
     }
 }
-

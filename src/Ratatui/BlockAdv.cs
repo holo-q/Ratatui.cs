@@ -71,7 +71,6 @@ public static class BlockAdvExtensions
     {
         Interop.Native.RatatuiBarChartSetBlockAdv(b.DangerousHandle, (byte)adv.Borders, (uint)adv.BorderType,
             adv.Pad.Left, adv.Pad.Top, adv.Pad.Right, adv.Pad.Bottom, IntPtr.Zero, UIntPtr.Zero);
-        Interop.Native.RatatuiBarChartSetBlockTitleAlignment(b.DangerousHandle, (uint)adv.TitleAlignment);
         return b;
     }
 
@@ -79,7 +78,6 @@ public static class BlockAdvExtensions
     {
         Interop.Native.RatatuiSparklineSetBlockAdv(s.DangerousHandle, (byte)adv.Borders, (uint)adv.BorderType,
             adv.Pad.Left, adv.Pad.Top, adv.Pad.Right, adv.Pad.Bottom, IntPtr.Zero, UIntPtr.Zero);
-        Interop.Native.RatatuiSparklineSetBlockTitleAlignment(s.DangerousHandle, (uint)adv.TitleAlignment);
         return s;
     }
 
@@ -91,4 +89,3 @@ public static class BlockAdvExtensions
         return s;
     }
 }
-

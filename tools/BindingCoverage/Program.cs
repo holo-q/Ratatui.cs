@@ -9,6 +9,17 @@ using System.Text.RegularExpressions;
 
 static class Program
 {
+    private static readonly string[] MacroNames = new[]
+    {
+        "ratatui_block_title_fn",
+        "ratatui_block_title_spans_fn",
+        "ratatui_block_adv_fn",
+        "ratatui_block_title_alignment_fn",
+        "ratatui_reserve_vec_fn",
+        "ratatui_set_style_fn",
+        "ratatui_set_selected_i32_fn",
+    };
+
     private static int Main(string[] args)
     {
         try
@@ -199,8 +210,39 @@ static class Program
                 if (name.StartsWith("ratatui_", StringComparison.Ordinal))
                     set.Add(name);
             }
+
+            ExtractMacroExports(text, set);
         }
         return set;
+    }
+
+    private static void ExtractMacroExports(string text, HashSet<string> set)
+    {
+        foreach (var macro in MacroNames)
+        {
+            var target = macro + "!";
+            var idx = text.IndexOf(target, StringComparison.Ordinal);
+            while (idx >= 0)
+            {
+                var cursor = idx + target.Length;
+                while (cursor < text.Length && char.IsWhiteSpace(text[cursor])) cursor++;
+                if (cursor < text.Length && text[cursor] == '(')
+                {
+                    cursor++;
+                    while (cursor < text.Length && char.IsWhiteSpace(text[cursor])) cursor++;
+                    var start = cursor;
+                    while (cursor < text.Length && (char.IsLetterOrDigit(text[cursor]) || text[cursor] == '_')) cursor++;
+                    if (cursor > start)
+                    {
+                        var name = text.Substring(start, cursor - start);
+                        if (!string.IsNullOrEmpty(name) && name.StartsWith("ratatui_", StringComparison.Ordinal))
+                            set.Add(name);
+                    }
+                }
+
+                idx = text.IndexOf(target, cursor, StringComparison.Ordinal);
+            }
+        }
     }
 
     private static HashSet<string> ExtractDllImportsFromSource(string interopDir)
